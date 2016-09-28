@@ -56,7 +56,7 @@ validClass[0,:]=validClass[0,:]-1
 testClass[0,:]=testClass[0,:]-1
 
 # print (trainImg.shape)
-CASE = 1
+CASE = 2
 
 if CASE == 1:
 	train_dataset = trainImg.reshape(
