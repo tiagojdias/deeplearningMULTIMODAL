@@ -101,38 +101,6 @@ for idx3 in range(nmbTestImg):
 # plt.xlabel(testClass[0,500])
 # plt.show()
 
-###############BULLLSH**********************###################
-# Z = misc.toimage(trainMaskAux[:,:,501])       # Create a PIL image
-# plt.imshow(Z, cmap='gray')
-# plt.xlabel(testClass[0,500])
-# plt.show()
-
-# CASE = 1
-
-# if CASE == 2:
-# 	print("IMG ONLY\n")
-# 	trainImg = trainImgAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# 	validImg = validImgAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# 	testImg = testImgAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# else:
-# 	print("SEG ONLY\n")
-# 	trainImg = trainMaskAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# 	validImg = validMaskAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# 	testImg = testMaskAux.reshape(
-# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-# print(trainImg.shape)
-
-
-# Z = misc.toimage(trainImg[501,:,:,0])       # Create a PIL image
-# plt.imshow(Z, cmap='gray')
-# plt.xlabel(testClass[0,500])
-# plt.show()
-####################################################################
 # print(type(trainClass))
 # print(trainClass.shape)
 # print(trainImg[0,:,:,:])
@@ -226,7 +194,7 @@ filter_size4 =1
 num_channels4 = 500
 
 
-CASE = 1
+CASE = 2
 # tf_train_dataset = tf.placeholder(
 #     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
 tf_train_dataset = tf.placeholder(tf.float32,  shape=[
