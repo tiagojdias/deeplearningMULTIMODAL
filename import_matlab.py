@@ -257,8 +257,9 @@ def model(x):
 with tf.variable_scope("my_model") as scope:
 	logits = model (tf_train_dataset)
 	scope.reuse_variables()
+	valid_logits = model(tf_valid_dataset)
 	test_logits = model(tf_test_dataset)
-	# valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
+	
 	
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits,tf_train_labels))    
@@ -267,7 +268,7 @@ optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
-# valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
+valid_prediction = tf.nn.softmax(valid_logits)
 test_prediction = tf.nn.softmax(test_logits)
 
 
@@ -301,8 +302,8 @@ with tf.Session() as session:
     if step%10==0:
 	    print('Minibatch loss at step %d: %f' % (step, l))
 	    print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-	    # print('Validation accuracy: %.1f%%' % accuracy(
-     #     	valid_prediction.eval(), validClass))
+	    print('Validation accuracy: %.1f%%' % accuracy(
+         	valid_prediction.eval(), validClass))
 
   # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
   print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
