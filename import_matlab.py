@@ -28,8 +28,8 @@ nmbTestImg = 501
 
 mat_contents = sio.loadmat('Trn_stuff.mat')
 # print(mat_contents.keys())
-trainImg = mat_contents['trainImg']
-trainMask = mat_contents['trainMask']
+trainImgAux = mat_contents['trainImg']
+trainMaskAux = mat_contents['trainMask']
 trainClass = mat_contents['trainClass']
 # print(trainImg.shape)
 # print(trainMask.shape)
@@ -37,8 +37,8 @@ trainClass = mat_contents['trainClass']
 
 mat_contents = sio.loadmat('Val_stuff.mat')
 # print(mat_contents.keys())
-validImg = mat_contents['valImg']
-validMask = mat_contents['valMask']
+validImgAux = mat_contents['valImg']
+validMaskAux = mat_contents['valMask']
 validClass = mat_contents['valClass']
 # print(validImg.shape)
 # print(validMask.shape)
@@ -46,58 +46,93 @@ validClass = mat_contents['valClass']
 
 mat_contents = sio.loadmat('Tst_stuff.mat')
 # print(mat_contents.keys())
-testImg = mat_contents['testImg']
-testMask = mat_contents['testMask']
-testClass = mat_contents['testClass']
+testImgAux = mat_contents['testImg']
+testMaskAux = mat_contents['testMask']
+testClass = mat_contents['testClass']	
 
 
-trainClass[0,:]=trainClass[0,:]-1
-validClass[0,:]=validClass[0,:]-1
-testClass[0,:]=testClass[0,:]-1
+trainClass=trainClass-1
+validClass=validClass-1
+testClass=testClass-1
 
-
-print(testImg.shape[2])
+print (trainImgAux.shape)
+print(testImgAux.shape[2])
 print(testClass.shape)
 
-# for idx in range(testImg.shape[2]):
-# 	Z = misc.toimage(testImg[:,:,idx])       # Create a PIL image
-# 	plt.imshow(Z, cmap='gray')
-# 	plt.xlabel(testClass[0,idx])
-# 	plt.show()
+trainImg = np.zeros(
+	[trainImgAux.shape[2],imgSize,imgSize,num_channels],dtype = 'float32')
+trainMask = np.zeros(
+	[trainMaskAux.shape[2],imgSize,imgSize,num_channels],dtype = "float32")
 
-Z = misc.toimage(trainMask[:,:,0])       # Create a PIL image
-plt.imshow(Z, cmap='gray')
-plt.xlabel(testClass[0,500])
-plt.show()
+validImg = np.zeros(
+	[validImgAux.shape[2],imgSize,imgSize,num_channels],dtype = 'float32')
+validMask = np.zeros(
+	[validMaskAux.shape[2],imgSize,imgSize,num_channels],dtype = "float32")
 
-# Z = misc.toimage(testImg[:,:,500])       # Create a PIL image
+testImg = np.zeros(
+	[testImgAux.shape[2],imgSize,imgSize,num_channels],dtype = 'float32')
+testMask = np.zeros(
+	[testMaskAux.shape[2],imgSize,imgSize,num_channels],dtype = "float32")
+
+print(trainImg.shape,trainMask.shape)
+print(validImg.shape,validMask.shape)
+print(testImg.shape,testMask.shape)
+
+# Z = misc.toimage(trainMaskAux[:,:,501])       # Create a PIL image
+# plt.imshow(Z, cmap='gray')
+# plt.xlabel(trainClass[0,500])
+# plt.show()
+
+for idx1 in range(nmbTrainImg):
+	trainImg[idx1,:,:,0]=trainImgAux[:,:,idx1]
+	trainMask[idx1,:,:,0]=trainMaskAux[:,:,idx1]
+
+for idx2 in range(nmbValImg):
+	validImg[idx2,:,:,0]=validImgAux[:,:,idx2]
+	validMask[idx2,:,:,0]=validMaskAux[:,:,idx2]
+
+for idx3 in range(nmbTestImg):
+	testImg[idx3,:,:,0]=testImgAux[:,:,idx3]
+	testMask[idx3,:,:,0]=testMaskAux[:,:,idx3]
+
+# print (trainImg.shape)
+# Z = misc.toimage(trainMask[501,:,:,0])       # Create a PIL image
 # plt.imshow(Z, cmap='gray')
 # plt.xlabel(testClass[0,500])
 # plt.show()
-# print(testImg.shape)
-# print(testMask.shape)
-# print(testClass.shape)
-# print(testImg.shape)
-# print(testClass.shape)
 
-# print (trainImg.shape)
-CASE = 1
+###############BULLLSH**********************###################
+# Z = misc.toimage(trainMaskAux[:,:,501])       # Create a PIL image
+# plt.imshow(Z, cmap='gray')
+# plt.xlabel(testClass[0,500])
+# plt.show()
 
-if CASE == 1:
-	trainImg = trainImg.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-	validImg = validImg.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-	testImg = testImg.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-else:
-	trainImg = trainMask.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-	validImg = validMask.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
-	testImg = testMask.reshape(
-		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# CASE = 1
 
+# if CASE == 2:
+# 	print("IMG ONLY\n")
+# 	trainImg = trainImgAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# 	validImg = validImgAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# 	testImg = testImgAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# else:
+# 	print("SEG ONLY\n")
+# 	trainImg = trainMaskAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# 	validImg = validMaskAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# 	testImg = testMaskAux.reshape(
+# 		(-1,imgSize,imgSize,num_channels)).astype(np.float32)
+# print(trainImg.shape)
+
+
+# Z = misc.toimage(trainImg[501,:,:,0])       # Create a PIL image
+# plt.imshow(Z, cmap='gray')
+# plt.xlabel(testClass[0,500])
+# plt.show()
+####################################################################
 # print(type(trainClass))
 # print(trainClass.shape)
 # print(trainImg[0,:,:,:])
@@ -116,6 +151,7 @@ testClass = (np.arange(num_classes) == testClass[:,None]).astype(np.float32)
 
 
 print(testClass[500])
+
 # print(trainClass.shape)
 # print(validClass.shape)
 # print(testClass.shape)
@@ -189,6 +225,8 @@ num_channels3 = 500
 filter_size4 =1
 num_channels4 = 500
 
+
+CASE = 1
 # tf_train_dataset = tf.placeholder(
 #     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
 tf_train_dataset = tf.placeholder(tf.float32,  shape=[
@@ -196,8 +234,15 @@ tf_train_dataset = tf.placeholder(tf.float32,  shape=[
 tf_train_labels = tf.placeholder(
 	tf.float32, shape = [None, num_classes])
 
-tf_valid_dataset = tf.constant(validImg)
-tf_test_dataset = tf.constant(testImg)
+if CASE == 1:
+	tf_valid_dataset = tf.constant(validImg)
+	# tf_test_dataset = tf.constant(testImg)
+	tf_test_dataset = tf.constant(testImg)
+else :
+	tf_valid_dataset = tf.constant(validMask)
+	# tf_test_dataset = tf.constant(testImg)
+	tf_test_dataset = tf.constant(testMask)
+
 
 print(tf_train_dataset)
 print (tf_valid_dataset)
@@ -208,6 +253,7 @@ def model(x):
 		conv_layer1,conv_weights1 = convolution_layer(
 			x,num_channels,filter_size1, num_channels1, True,False)
 	print("Conv1 layer:", conv_layer1)
+	
 	with tf.variable_scope("conv2"):
 		conv_layer2,conv_weights2 = convolution_layer(
 			conv_layer1,num_channels1,filter_size2, num_channels2, True,False)
@@ -219,34 +265,33 @@ def model(x):
 			conv_layer2,num_channels2,filter_size3, num_channels3, False,True)
 	print("Conv3 layer:", conv_layer3)
 	
-	with tf.variable_scope("conv4"):
-		conv_layer4,conv_weights4 = convolution_layer(
-			conv_layer3,num_channels3,filter_size4, num_classes, False,False)
-	print (conv_layer4) 
+	# with tf.variable_scope("conv4"):
+	# 	conv_layer4,conv_weights4 = convolution_layer(
+	# 		conv_layer3,num_channels3,filter_size4, num_classes, False,False)
+	# print (conv_layer4) 
 	
 	with tf.variable_scope("flat1"):
-		flat_layer, num_features = flaten_layer(conv_layer4)
+		flat_layer, num_features = flaten_layer(conv_layer3)
 	
 	print("Flat layer:", flat_layer)
 	
-	# with tf.variable_scope("fcon1"):
-	# 	fc_layer1 = fc_layer(
-	# 	 	flat_layer, num_features, num_classes, False)
-	# print (fc_layer1)
+	with tf.variable_scope("fcon1"):
+		fc_layer1 = fc_layer(
+		 	flat_layer, num_features, num_classes, False)
+	print (fc_layer1)
 	# final_layer = fc_layer(
 	#  	flat_layer, num_channels3, num_classes, False)
 	# print("Final layer:",final_layer)
-	return (flat_layer)
+	# return (flat_layer)
+	return (fc_layer1)
 
 # Training computation.
-with tf.variable_scope("all_model") as scope:
+with tf.variable_scope("my_model") as scope:
 	logits = model (tf_train_dataset)
 	scope.reuse_variables()
 	test_logits = model(tf_test_dataset)
 	# valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
 	
-    
-
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits,tf_train_labels))    
 
@@ -276,7 +321,11 @@ with tf.Session() as session:
     offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
     # batch_data = trainImg[:100, :, :, :]
     # batch_labels = trainClass[:100, :] 
-    batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+    if CASE == 1:
+    	batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+    else:
+    	batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+
     batch_labels = trainClass[offset:(offset + batch_size), :]
     feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
     _, l, predictions = session.run(
@@ -287,4 +336,5 @@ with tf.Session() as session:
 	    # print('Validation accuracy: %.1f%%' % accuracy(
      #     	valid_prediction.eval(), validClass))
 
-  print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
+  # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
+  print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
