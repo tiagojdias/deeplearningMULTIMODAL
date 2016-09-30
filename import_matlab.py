@@ -219,6 +219,8 @@ print (tf_test_dataset)
 
 print("Test for commit")
 
+
+
 def model(x):
 	with tf.variable_scope("conv1"):
 		conv_layer1,conv_weights1 = convolution_layer(
@@ -286,7 +288,6 @@ def accuracy(predictions, labels):
 num_steps = 20
 batch_size = 100
 
-print("TEST TO")
 # with tf.Session() as session:
 #   session.run(tf.initialize_all_variables())
 #   print('Initialized')
