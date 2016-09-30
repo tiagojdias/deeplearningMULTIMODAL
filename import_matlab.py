@@ -217,7 +217,7 @@ print(tf_train_dataset)
 print (tf_valid_dataset)
 print (tf_test_dataset)
 
-print("Test")
+print("Test for commit")
 
 def model(x):
 	with tf.variable_scope("conv1"):
