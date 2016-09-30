@@ -284,6 +284,7 @@ def accuracy(predictions, labels):
 num_steps = 20
 batch_size = 100
 
+print("TEST TO")
 # with tf.Session() as session:
 #   session.run(tf.initialize_all_variables())
 #   print('Initialized')
