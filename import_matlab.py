@@ -117,7 +117,6 @@ trainClass = (np.arange(num_classes) == trainClass[:,None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:,None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:,None]).astype(np.float32)
 
-print("Fiz um novo commasddasdit")
 print(testClass[500])
 
 # print(trainClass.shape)
@@ -197,6 +196,8 @@ num_channels4 = 500
 CASE = 1
 # tf_train_dataset = tf.placeholder(
 #     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
+timer = time.time()
+
 tf_train_dataset = tf.placeholder(tf.float32,  shape=[
 	None, imgSize, imgSize, num_channels])
 tf_train_labels = tf.placeholder(
@@ -307,3 +308,5 @@ with tf.Session() as session:
 
   # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
   print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
+
+print("Elapsed time is " + str(time.time() - timer) + " seconds.")
