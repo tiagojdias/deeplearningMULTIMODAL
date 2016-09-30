@@ -217,8 +217,6 @@ print(tf_train_dataset)
 print (tf_valid_dataset)
 print (tf_test_dataset)
 
-print ("Tests")
-
 def model(x):
 	with tf.variable_scope("conv1"):
 		conv_layer1,conv_weights1 = convolution_layer(
