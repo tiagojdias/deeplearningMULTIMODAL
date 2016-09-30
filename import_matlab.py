@@ -257,15 +257,18 @@ def model(x):
 # Training computation.
 with tf.variable_scope("my_model") as scope:
 	logits = model (tf_train_dataset)
+	print (tf.get_variable_scope().reuse)
 	scope.reuse_variables()
+	print (tf.get_variable_scope().reuse)
 	valid_logits = model(tf_valid_dataset)
+	print (tf.get_variable_scope().reuse)
 	test_logits = model(tf_test_dataset)
 	
 	
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits,tf_train_labels))    
 
-optimizer = tf.train.GradientDescentOptimizer(1e-3).minimize(loss)
+optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
@@ -278,35 +281,35 @@ def accuracy(predictions, labels):
           / predictions.shape[0])
 
 #Placeholder variables
-num_steps = 100
+num_steps = 20
 batch_size = 100
 
-with tf.Session() as session:
-  session.run(tf.initialize_all_variables())
-  print('Initialized')
-  for step in range(num_steps):
-    # offset = (step * batch_size) % (train_labels.shape[0] - batch_size)
-    # batch_data = trainImg[:100,:,:]
-    # batch_labels = trainClass[:100,:]
-    offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
-    # batch_data = trainImg[:100, :, :, :]
-    # batch_labels = trainClass[:100, :] 
-    if CASE == 1:
-    	batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-    else:
-    	batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+# with tf.Session() as session:
+#   session.run(tf.initialize_all_variables())
+#   print('Initialized')
+#   for step in range(num_steps):
+#     # offset = (step * batch_size) % (train_labels.shape[0] - batch_size)
+#     # batch_data = trainImg[:100,:,:]
+#     # batch_labels = trainClass[:100,:]
+#     offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
+#     # batch_data = trainImg[:100, :, :, :]
+#     # batch_labels = trainClass[:100, :] 
+#     if CASE == 1:
+#     	batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+#     else:
+#     	batch_data = trainMask[offset:(offset + batch_size), :, :, :]
 
-    batch_labels = trainClass[offset:(offset + batch_size), :]
-    feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
-    _, l, predictions = session.run(
-    	[optimizer, loss, train_prediction], feed_dict=feed_dict)
-    if step%10==0:
-	    print('Minibatch loss at step %d: %f' % (step, l))
-	    print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-	    print('Validation accuracy: %.1f%%' % accuracy(
-         	valid_prediction.eval(), validClass))
+#     batch_labels = trainClass[offset:(offset + batch_size), :]
+#     feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
+#     _, l, predictions = session.run(
+#     	[optimizer, loss, train_prediction], feed_dict=feed_dict)
+#     if step%10==0:
+# 	    print('Minibatch loss at step %d: %f' % (step, l))
+# 	    print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
+# 	    print('Validation accuracy: %.1f%%' % accuracy(
+#          	valid_prediction.eval(), validClass))
 
-  # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
-  print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
+#   # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
+#   print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
 
-print("Elapsed time is " + str(time.time() - timer) + " seconds.")
+# print("Elapsed time is " + str(time.time() - timer) + " seconds.")
