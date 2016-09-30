@@ -117,7 +117,7 @@ trainClass = (np.arange(num_classes) == trainClass[:,None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:,None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:,None]).astype(np.float32)
 
-
+print("Fiz um commit")
 print(testClass[500])
 
 # print(trainClass.shape)
@@ -194,7 +194,7 @@ filter_size4 =1
 num_channels4 = 500
 
 
-CASE = 2
+CASE = 1
 # tf_train_dataset = tf.placeholder(
 #     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
 tf_train_dataset = tf.placeholder(tf.float32,  shape=[
@@ -264,7 +264,7 @@ with tf.variable_scope("my_model") as scope:
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits,tf_train_labels))    
 
-optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
+optimizer = tf.train.GradientDescentOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
