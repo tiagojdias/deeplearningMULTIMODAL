@@ -91,7 +91,7 @@ for idx2 in range(nmbValImg):
 	validImg[idx2,:,:,0]=validImgAux[:,:,idx2]
 	validMask[idx2,:,:,0]=validMaskAux[:,:,idx2]
 
-for idx3 in range(nmbTestImg):
+for idx3 in range(nmbTestImg - 100):
 	testImg[idx3,:,:,0]=testImgAux[:,:,idx3]
 	testMask[idx3,:,:,0]=testMaskAux[:,:,idx3]
 
@@ -217,10 +217,6 @@ print(tf_train_dataset)
 print (tf_valid_dataset)
 print (tf_test_dataset)
 
-print("Test for commit")
-
-
-
 def model(x):
 	with tf.variable_scope("conv1"):
 		conv_layer1,conv_weights1 = convolution_layer(
@@ -261,13 +257,9 @@ def model(x):
 # Training computation.
 with tf.variable_scope("my_model") as scope:
 	logits = model (tf_train_dataset)
-	print (tf.get_variable_scope().reuse)
 	scope.reuse_variables()
-	print (tf.get_variable_scope().reuse)
-	valid_logits = model(tf_valid_dataset)
-	print (tf.get_variable_scope().reuse)
+	# valid_logits = model(tf_valid_dataset)
 	test_logits = model(tf_test_dataset)
-	
 	
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits,tf_train_labels))    
@@ -276,16 +268,15 @@ optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
-valid_prediction = tf.nn.softmax(valid_logits)
+# valid_prediction = tf.nn.softmax(valid_logits)
 test_prediction = tf.nn.softmax(test_logits)
-
 
 def accuracy(predictions, labels):
   return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
           / predictions.shape[0])
 
 #Placeholder variables
-num_steps = 20
+num_epochs = 10
 batch_size = 100
 
 # with tf.Session() as session:
@@ -310,10 +301,31 @@ batch_size = 100
 #     if step%10==0:
 # 	    print('Minibatch loss at step %d: %f' % (step, l))
 # 	    print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-# 	    print('Validation accuracy: %.1f%%' % accuracy(
-#          	valid_prediction.eval(), validClass))
+# 	    # print('Validation accuracy: %.1f%%' % accuracy(
+#      #     	valid_prediction.eval(), validClass))
 
 #   # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass)) 
 #   print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
 
-# print("Elapsed time is " + str(time.time() - timer) + " seconds.")
+with tf.Session() as session:
+
+	session.run(tf.initialize_all_variables())
+
+	for epochs in range(num_epochs):
+		avg_cost = 0
+		num_steps = int(nmbTrainImg/batch_size)
+
+		for step in range(num_steps):
+    		offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
+
+    		if CASE == 1:
+    			batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+    		else:
+    			batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+
+    		batch_labels = trainClass[offset:(offset + batch_size), :]
+    		feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
+    		_, l, predictions = session.run(
+    			[optimizer, loss, train_prediction], feed_dict=feed_dict)
+
+print("Elapsed time is " + str(time.time() - timer) + " seconds.")
