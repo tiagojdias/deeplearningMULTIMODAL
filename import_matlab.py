@@ -327,5 +327,6 @@ with tf.Session() as session:
     		feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
     		_, l, predictions = session.run(
     			[optimizer, loss, train_prediction], feed_dict=feed_dict)
+    		
 
 print("Elapsed time is " + str(time.time() - timer) + " seconds.")
