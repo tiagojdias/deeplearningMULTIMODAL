@@ -337,6 +337,6 @@ with tf.Session() as session:
 
 		print("Epoch:", '%d' % (epoch+1), "loss=", "{:.4f}".format(avg_cost))
 
-	print("Optimization Finished!")
+	# print("Optimization Finished!")
 	print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
