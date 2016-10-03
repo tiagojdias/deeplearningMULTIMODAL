@@ -31,18 +31,13 @@ mat_contents = sio.loadmat('Trn_stuff.mat')
 trainImgAux = mat_contents['trainImg']
 trainMaskAux = mat_contents['trainMask']
 trainClass = mat_contents['trainClass']
-# print(trainImg.shape)
-# print(trainMask.shape)
-# print(trainClass.shape)
+
 
 mat_contents = sio.loadmat('Val_stuff.mat')
 # print(mat_contents.keys())
 validImgAux = mat_contents['valImg']
 validMaskAux = mat_contents['valMask']
 validClass = mat_contents['valClass']
-# print(validImg.shape)
-# print(validMask.shape)
-# print(validClass.shape)
 
 mat_contents = sio.loadmat('Tst_stuff.mat')
 # print(mat_contents.keys())
@@ -50,14 +45,10 @@ testImgAux = mat_contents['testImg']
 testMaskAux = mat_contents['testMask']
 testClass = mat_contents['testClass']
 
-
+#Change Matlal classes in range(0,2) from range(1,3)
 trainClass = trainClass - 1
 validClass = validClass - 1
 testClass = testClass - 1
-
-# print (trainImgAux.shape)
-# print(testImgAux.shape[2])
-# print(testClass.shape)
 
 trainImg = np.zeros(
 	[trainImgAux.shape[2], imgSize, imgSize, num_channels], dtype='float32')
@@ -78,11 +69,6 @@ testMask = np.zeros(
 # print(validImg.shape, validMask.shape)
 # print(testImg.shape, testMask.shape)
 
-# Z = misc.toimage(trainMaskAux[:,:,501])       # Create a PIL image
-# plt.imshow(Z, cmap='gray')
-# plt.xlabel(trainClass[0,500])
-# plt.show()
-
 for idx1 in range(nmbTrainImg):
 	trainImg[idx1, :, :, 0] = trainImgAux[:, :, idx1]
 	trainMask[idx1, :, :, 0] = trainMaskAux[:, :, idx1]
@@ -95,33 +81,13 @@ for idx3 in range(nmbTestImg - 100):
 	testImg[idx3, :, :, 0] = testImgAux[:, :, idx3]
 	testMask[idx3, :, :, 0] = testMaskAux[:, :, idx3]
 
-# print (trainImg.shape)
-# Z = misc.toimage(trainMask[501,:,:,0])       # Create a PIL image
-# plt.imshow(Z, cmap='gray')
-# plt.xlabel(testClass[0,500])
-# plt.show()
-
-# print(type(trainClass))
-# print(trainClass.shape)
-# print(trainImg[0,:,:,:])
-
 trainClass = np.squeeze(np.asarray(trainClass))
 validClass = np.squeeze(np.asarray(validClass))
 testClass = np.squeeze(np.asarray(testClass))
 
-# print(trainClass.shape)
-# print(validClass.shape)
-# print(testClass.shape)
-print(testClass[500])
 trainClass = (np.arange(num_classes) == trainClass[:, None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:, None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:, None]).astype(np.float32)
-
-print(testClass[500])
-
-# print(trainClass.shape)
-# print(validClass.shape)
-# print(testClass.shape)
 # #######################################################################
 # TensorFlow Graph
 def convolution_layer(
@@ -146,8 +112,6 @@ def convolution_layer(
 
 	# return weights,biases
 	return layer, weights
-
-
 def flaten_layer(layer):
 
 	layer_shape = layer.get_shape()
@@ -157,8 +121,6 @@ def flaten_layer(layer):
 	flat_layer = tf.reshape(layer, [-1, num_features])
 
 	return flat_layer, num_features
-
-
 def fc_layer(img, num_inputs, num_outputs, relu):  # Use Rectified Linear Unit (ReLU)?
 
 	shape = [num_inputs, num_outputs]
@@ -282,35 +244,6 @@ def accuracy(predictions, labels):
 # Placeholder variables
 num_epochs = 20
 batch_size = 100
-
-# with tf.Session() as session:
-#   session.run(tf.initialize_all_variables())
-#   print('Initialized')
-#   for step in range(num_steps):
-#     # offset = (step * batch_size) % (train_labels.shape[0] - batch_size)
-#     # batch_data = trainImg[:100,:,:]
-#     # batch_labels = trainClass[:100,:]
-#     offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
-#     # batch_data = trainImg[:100, :, :, :]
-#     # batch_labels = trainClass[:100, :]
-#     if CASE == 1:
-#     	batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-#     else:
-#     	batch_data = trainMask[offset:(offset + batch_size), :, :, :]
-
-#     batch_labels = trainClass[offset:(offset + batch_size), :]
-#     feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
-#     _, l, predictions = session.run(
-#     	[optimizer, loss, train_prediction], feed_dict=feed_dict)
-#     if step%10==0:
-# 	    print('Minibatch loss at step %d: %f' % (step, l))
-# 	    print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-# 	    # print('Validation accuracy: %.1f%%' % accuracy(
-#      #     	valid_prediction.eval(), validClass))
-
-#   # print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
-# print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(),
-# testClass))
 
 with tf.Session() as session:
 
