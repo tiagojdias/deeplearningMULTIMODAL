@@ -277,7 +277,8 @@ with tf.Session() as session:
 		axs.plot(x,y,'-b')
 		# axs.plot(x,z,'-r')
 		# axs.set_ylim([,10])
-		
+		# print (max(y))
+		plt.ylim(0,max(y)+1)
 		plt.xlabel('Epochs')
 		plt.title('Average Loss')
 		plt.grid('on')
@@ -286,5 +287,5 @@ with tf.Session() as session:
 		print("Epoch:", '%d' % (epoch+1), "loss=", "{:.3f}".format(avg_cost))
 
 	# print("Optimization Finished!")
-	print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
+	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
