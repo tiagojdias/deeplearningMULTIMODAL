@@ -6,13 +6,12 @@ import numpy as np
 import scipy.misc as misc
 import scipy.ndimage as ndimage
 from scipy.signal import convolve2d
-import pylab as plt
 import random
 import math
 import scipy.io as sio
 
 
-# Image Definitions
+# Image Definition
 imgSize = 56
 imgSize_flat = imgSize * imgSize
 imgShape = (imgSize, imgSize)
@@ -242,8 +241,14 @@ def accuracy(predictions, labels):
           / predictions.shape[0])
 
 # Placeholder variables
-num_epochs = 20
+num_epochs = 10
 batch_size = 100
+
+x = []
+y = []
+z = []
+fig,axs = plt.subplots()
+axs.set_xlim([1,10])
 
 with tf.Session() as session:
 
@@ -263,12 +268,22 @@ with tf.Session() as session:
 			batch_labels = trainClass[offset:(offset + batch_size), :]
 			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
 			_, l, predictions = session.run([optimizer, loss, train_prediction], feed_dict=feed_dict)
-
+			# valid = accuracy.run(valid_prediction.eval(), validClass)
 			avg_cost += l / num_steps
+		
+		x.append(epoch+1)
+		y.append(avg_cost)
+		# z.append(5)
+		axs.plot(x,y,'-b')
+		# axs.plot(x,z,'-r')
+		# axs.set_ylim([,10])
+		
+		plt.xlabel('Epochs')
+		plt.title('Average Loss')
+		plt.grid('on')
+		plt.pause(0.0001)
 
-			    		        # Display logs per epoch step
-
-		print("Epoch:", '%d' % (epoch+1), "loss=", "{:.4f}".format(avg_cost))
+		print("Epoch:", '%d' % (epoch+1), "loss=", "{:.3f}".format(avg_cost))
 
 	# print("Optimization Finished!")
 	print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), testClass))
