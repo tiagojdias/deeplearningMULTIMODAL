@@ -224,8 +224,6 @@ with tf.variable_scope("my_model") as scope:
 	valid_logits = model(tf_valid_dataset) 
 	test_logits = model(tf_test_dataset)
 	
-	
-
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
 
