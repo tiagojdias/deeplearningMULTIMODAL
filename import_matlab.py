@@ -244,6 +244,15 @@ def accuracy(predictions, labels):
 num_epochs = 10
 batch_size = 100
 
+#############################################################################
+logs_path = '/tmp/tensorflow_logs/example'
+# Create a summary to monitor cost tensor
+tf.scalar_summary("loss", loss)
+# #Create a summary to monitor accuracy tensor
+# tf.scalar_summary("accuracy", acc)
+# Merge all summaries into a single op
+merged_summary_op = tf.merge_all_summaries()
+#############################################################################
 x = []
 y = []
 z = []
@@ -251,8 +260,9 @@ fig,axs = plt.subplots()
 axs.set_xlim([1,10])
 
 with tf.Session() as session:
-
 	session.run(tf.initialize_all_variables())
+	summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+	
 	for epoch in range(num_epochs):
 		avg_cost = 0
 		num_steps = int(nmbTrainImg / batch_size)
@@ -267,8 +277,10 @@ with tf.Session() as session:
 
 			batch_labels = trainClass[offset:(offset + batch_size), :]
 			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
-			_, l, predictions = session.run([optimizer, loss, train_prediction], feed_dict=feed_dict)
+			_, l, predictions, summary = session.run(
+				[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
 			# valid = accuracy.run(valid_prediction.eval(), validClass)
+			summary_writer.add_summary(summary, epoch * num_steps + step)
 			avg_cost += l / num_steps
 		
 		x.append(epoch+1)
