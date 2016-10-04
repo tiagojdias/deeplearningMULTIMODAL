@@ -221,8 +221,9 @@ def model(x):
 with tf.variable_scope("my_model") as scope:
 	logits = model(tf_train_dataset)
 	scope.reuse_variables()
+	valid_logits = model(tf_valid_dataset) 
 	test_logits = model(tf_test_dataset)
-	# valid_logits = model(tf_valid_dataset)
+	
 	
 
 loss = tf.reduce_mean(
@@ -232,7 +233,7 @@ optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
-# valid_prediction = tf.nn.softmax(valid_logits)
+valid_prediction = tf.nn.softmax(valid_logits)
 test_prediction = tf.nn.softmax(test_logits)
 
 
@@ -241,7 +242,7 @@ def accuracy(predictions, labels):
           / predictions.shape[0])
 
 # Placeholder variables
-num_epochs = 10
+num_epochs = 2
 batch_size = 100
 
 #############################################################################
@@ -296,8 +297,9 @@ with tf.Session() as session:
 		plt.grid('on')
 		plt.pause(0.0001)
 
-		print("Epoch:", '%d' % (epoch+1), "loss=", "{:.3f}".format(avg_cost))
-
+		print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
+		valid = accuracy(valid_prediction.eval(), validClass)
+		print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
 	# print("Optimization Finished!")
 	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
