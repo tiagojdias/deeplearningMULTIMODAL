@@ -242,7 +242,7 @@ def accuracy(predictions, labels):
           / predictions.shape[0])
 
 # Placeholder variables
-num_epochs = 2
+num_epochs = 2 #10
 batch_size = 100
 
 #############################################################################
