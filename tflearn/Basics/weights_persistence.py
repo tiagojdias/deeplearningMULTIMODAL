@@ -25,4 +25,15 @@ model.load("model.tfl")
 
 dense1_vars = tflearn.variables.get_layer_variables_by_name('dense1')
 print("Dense1 layer weights:")
-print (model.get_weights(dense1_vars[1]))
+print (model.get_weights(dense1_vars[0]))
+print("Dense1 layer biases:")
+
+with model.session.as_default():
+	print(tflearn.variables.get_value(dense1_vars[1]))
+
+print("Dense2 layer weights:")
+print (model.get_weights(dense2.W))
+
+print("dense2 layer biases:")
+with model.session.as_default():
+	print(tflearn.variables.get_value(dense2.b))
