@@ -221,7 +221,7 @@ def model(x):
 with tf.variable_scope("my_model") as scope:
 	logits = model(tf_train_dataset)
 	scope.reuse_variables()
-	valid_logits = model(tf_valid_dataset) 
+	# valid_logits = model(tf_valid_dataset) 
 	test_logits = model(tf_test_dataset)
 	
 loss = tf.reduce_mean(
@@ -231,7 +231,7 @@ optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
 # Predictions for the training, validation, and test data.
 train_prediction = tf.nn.softmax(logits)
-valid_prediction = tf.nn.softmax(valid_logits)
+# valid_prediction = tf.nn.softmax(valid_logits)
 test_prediction = tf.nn.softmax(test_logits)
 
 
@@ -260,44 +260,47 @@ axs.set_xlim([1,10])
 
 with tf.Session() as session:
 	session.run(tf.initialize_all_variables())
-	summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+	tf.train.import_meta_graph("/tmp/my-model-10000.meta")
+	hparams = tf.get_collection("hparams")
+	print (hparams)
+	# summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 	
-	for epoch in range(num_epochs):
-		avg_cost = 0
-		num_steps = int(nmbTrainImg / batch_size)
+	# for epoch in range(num_epochs):
+	# 	avg_cost = 0
+	# 	num_steps = int(nmbTrainImg / batch_size)
 
-		for step in range(num_steps):
-			offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
+	# 	for step in range(num_steps):
+	# 		offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
 
-			if CASE == 1:
-				batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-			else:
-				batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+	# 		if CASE == 1:
+	# 			batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+	# 		else:
+	# 			batch_data = trainMask[offset:(offset + batch_size), :, :, :]
 
-			batch_labels = trainClass[offset:(offset + batch_size), :]
-			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
-			_, l, predictions, summary = session.run(
-				[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
-			# valid = accuracy.run(valid_prediction.eval(), validClass)
-			summary_writer.add_summary(summary, epoch * num_steps + step)
-			avg_cost += l / num_steps
+	# 		batch_labels = trainClass[offset:(offset + batch_size), :]
+	# 		feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
+	# 		_, l, predictions, summary = session.run(
+	# 			[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
+	# 		# valid = accuracy.run(valid_prediction.eval(), validClass)
+	# 		summary_writer.add_summary(summary, epoch * num_steps + step)
+	# 		avg_cost += l / num_steps
 		
-		x.append(epoch+1)
-		y.append(avg_cost)
-		# z.append(5)
-		axs.plot(x,y,'-b')
-		# axs.plot(x,z,'-r')
-		# axs.set_ylim([,10])
-		# print (max(y))
-		plt.ylim(0,max(y)+1)
-		plt.xlabel('Epochs')
-		plt.title('Average Loss')
-		plt.grid('on')
-		plt.pause(0.0001)
+	# 	x.append(epoch+1)
+	# 	y.append(avg_cost)
+	# 	# z.append(5)
+	# 	axs.plot(x,y,'-b')
+	# 	# axs.plot(x,z,'-r')
+	# 	# axs.set_ylim([,10])
+	# 	# print (max(y))
+	# 	plt.ylim(0,max(y)+1)
+	# 	plt.xlabel('Epochs')
+	# 	plt.title('Average Loss')
+	# 	plt.grid('on')
+	# 	plt.pause(0.0001)
 
-		print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
-		valid = accuracy(valid_prediction.eval(), validClass)
-		print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
-	# print("Optimization Finished!")
-	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
+	# 	print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
+	# 	valid = accuracy(valid_prediction.eval(), validClass)
+	# 	print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
+	# # print("Optimization Finished!")
+	# print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
