@@ -175,9 +175,13 @@ tf_train_labels = tf.placeholder(tf.float32, \
 	shape=[None, num_classes])
 
 if CASE == 1:
+	tf_valid_dataset = tf.constant(validImg)
+	tf_valid_labels = tf.constant(validClass)
 	tf_test_dataset = tf.constant(testImg)
 	tf_test_labels = tf.constant(testClass)
 else:
+	tf_valid_dataset = tf.constant(validMask)
+	tf_valid_labels = tf.constant(validClass)
 	tf_test_dataset = tf.constant(testMask)
 	tf_test_labels = tf.constant(testClass)
 # print (tf_test_dataset.get_shape())
@@ -226,7 +230,8 @@ def accuracy(predictions, labels):
           / predictions.shape[0])
 
 train_prediction = tf.nn.softmax(logits)
-valid_prediction = tf.nn.softmax(model(tf_test_dataset, False))
+valid_prediction = tf.nn.softmax(model(tf_valid_dataset, False))
+test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
 # Placeholder variables
 num_epochs = 10 #10
 batch_size = 100
@@ -272,11 +277,11 @@ with tf.Session() as session:
 			avg_cost += l / num_steps
 			train_pred = accuracy(predictions, batch_labels)
 
+		valid = accuracy(valid_prediction.eval(), validClass)
 		print("Epoch:", '%d' % (epoch+1),\
 		 "Train loss=", "{:.3f}".format(avg_cost),\
-		 "Train Accuracy=", "{:.3f}".format(train_pred))
-		# valid = accuracy(valid_prediction.eval(), validClass)
-		# print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
+		 "Train Accuracy=", "{:.3f}".format(train_pred),\
+		 "Valid Accuracy=", "{:.3f}".format(valid))
 	# print("Optimization Finished!")
-	print('Test accuracy: %.3f%%' % accuracy(valid_prediction.eval(), testClass))
+	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
