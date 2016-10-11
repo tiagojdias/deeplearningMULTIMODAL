@@ -76,7 +76,7 @@ for idx2 in range(nmbValImg):
 	validImg[idx2, :, :, 0] = validImgAux[:, :, idx2]
 	validMask[idx2, :, :, 0] = validMaskAux[:, :, idx2]
 
-for idx3 in range(nmbTestImg - 100):
+for idx3 in range(nmbTestImg):
 	testImg[idx3, :, :, 0] = testImgAux[:, :, idx3]
 	testMask[idx3, :, :, 0] = testMaskAux[:, :, idx3]
 
@@ -165,14 +165,14 @@ timer = time.time()
 tf_train_dataset = tf.placeholder(tf.float32, shape=[None, imgSize, imgSize, num_channels])
 tf_train_labels = tf.placeholder(tf.float32, shape=[None, num_classes])
 
-if CASE == 1:
-	tf_valid_dataset = tf.constant(validImg)
-	# tf_test_dataset = tf.constant(testImg)
-	tf_test_dataset = tf.constant(testImg)
-else:
-	tf_valid_dataset = tf.constant(validMask)
-	# tf_test_dataset = tf.constant(testImg)
-	tf_test_dataset = tf.constant(testMask)
+# if CASE == 1:
+# 	tf_valid_dataset = tf.constant(validImg)
+# 	# tf_test_dataset = tf.constant(testImg)
+# 	tf_test_dataset = tf.constant(testImg)
+# else:
+# 	tf_valid_dataset = tf.constant(validMask)
+# 	# tf_test_dataset = tf.constant(testImg)
+# 	tf_test_dataset = tf.constant(testMask)
 
 
 print(tf_train_dataset)
@@ -184,18 +184,18 @@ def model(x):
 	with tf.variable_scope("conv1"):
 		conv_layer1, conv_weights1 = convolution_layer(
 			x, num_channels, filter_size1, num_channels1, True, False)
-	print("Conv1 layer:", conv_layer1)
+	# print("Conv1 layer:", conv_layer1)
 
 	with tf.variable_scope("conv2"):
 		conv_layer2, conv_weights2 = convolution_layer(
 			conv_layer1, num_channels1, filter_size2, num_channels2, True, False)
 
-	print("Conv2 layer:", conv_layer2)
+	# print("Conv2 layer:", conv_layer2)
 
 	with tf.variable_scope("conv3"):
 		conv_layer3, conv_weights3 = convolution_layer(
 			conv_layer2, num_channels2, filter_size3, num_channels3, False, True)
-	print("Conv3 layer:", conv_layer3)
+	# print("Conv3 layer:", conv_layer3)
 
 	# with tf.variable_scope("conv4"):
 	# 	conv_layer4,conv_weights4 = convolution_layer(
@@ -205,12 +205,12 @@ def model(x):
 	with tf.variable_scope("flat1"):
 		flat_layer, num_features = flaten_layer(conv_layer3)
 
-	print("Flat layer:", flat_layer)
+	# print("Flat layer:", flat_layer)
 
 	with tf.variable_scope("fcon1"):
 		fc_layer1 = fc_layer(
 		 	flat_layer, num_features, num_classes, False)
-	print (fc_layer1)
+	# print (fc_layer1)
 	# final_layer = fc_layer(
 	#  	flat_layer, num_channels3, num_classes, False)
 	# print("Final layer:",final_layer)
@@ -220,19 +220,11 @@ def model(x):
 # Training computation.
 with tf.variable_scope("my_model") as scope:
 	logits = model(tf_train_dataset)
-	scope.reuse_variables()
-	# valid_logits = model(tf_valid_dataset) 
-	test_logits = model(tf_test_dataset)
 	
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
 
 optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
-
-# Predictions for the training, validation, and test data.
-train_prediction = tf.nn.softmax(logits)
-# valid_prediction = tf.nn.softmax(valid_logits)
-test_prediction = tf.nn.softmax(test_logits)
 
 
 def accuracy(predictions, labels):
@@ -252,55 +244,52 @@ tf.scalar_summary("loss", loss)
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
 #############################################################################
-x = []
-y = []
-z = []
-fig,axs = plt.subplots()
-axs.set_xlim([1,10])
+# x = []
+# y = []
+# z = []
+# fig,axs = plt.subplots()
+# axs.set_xlim([1,10])
 
 with tf.Session() as session:
 	session.run(tf.initialize_all_variables())
-	tf.train.import_meta_graph("/tmp/my-model-10000.meta")
-	hparams = tf.get_collection("hparams")
-	print (hparams)
-	# summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+	summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 	
-	# for epoch in range(num_epochs):
-	# 	avg_cost = 0
-	# 	num_steps = int(nmbTrainImg / batch_size)
+	for epoch in range(num_epochs):
+		avg_cost = 0
+		num_steps = int(nmbTrainImg / batch_size)
 
-	# 	for step in range(num_steps):
-	# 		offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
+		for step in range(num_steps):
+			offset = (step * batch_size) % (trainClass.shape[0] - batch_size)
 
-	# 		if CASE == 1:
-	# 			batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-	# 		else:
-	# 			batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+			if CASE == 1:
+				batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+			else:
+				batch_data = trainMask[offset:(offset + batch_size), :, :, :]
 
-	# 		batch_labels = trainClass[offset:(offset + batch_size), :]
-	# 		feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
-	# 		_, l, predictions, summary = session.run(
-	# 			[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
-	# 		# valid = accuracy.run(valid_prediction.eval(), validClass)
-	# 		summary_writer.add_summary(summary, epoch * num_steps + step)
-	# 		avg_cost += l / num_steps
+			batch_labels = trainClass[offset:(offset + batch_size), :]
+			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
+			_, l, predictions, summary = session.run(
+				[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
+			# valid = accuracy.run(valid_prediction.eval(), validClass)
+			summary_writer.add_summary(summary, epoch * num_steps + step)
+			avg_cost += l / num_steps
 		
-	# 	x.append(epoch+1)
-	# 	y.append(avg_cost)
-	# 	# z.append(5)
-	# 	axs.plot(x,y,'-b')
-	# 	# axs.plot(x,z,'-r')
-	# 	# axs.set_ylim([,10])
-	# 	# print (max(y))
-	# 	plt.ylim(0,max(y)+1)
-	# 	plt.xlabel('Epochs')
-	# 	plt.title('Average Loss')
-	# 	plt.grid('on')
-	# 	plt.pause(0.0001)
+		# x.append(epoch+1)
+		# y.append(avg_cost)
+		# # z.append(5)
+		# axs.plot(x,y,'-b')
+		# # axs.plot(x,z,'-r')
+		# # axs.set_ylim([,10])
+		# # print (max(y))
+		# plt.ylim(0,max(y)+1)
+		# plt.xlabel('Epochs')
+		# plt.title('Average Loss')
+		# plt.grid('on')
+		# plt.pause(0.0001)
 
-	# 	print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
-	# 	valid = accuracy(valid_prediction.eval(), validClass)
-	# 	print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
-	# # print("Optimization Finished!")
-	# print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
+		print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
+		# valid = accuracy(valid_prediction.eval(), validClass)
+		# print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
+	# print("Optimization Finished!")
+	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
