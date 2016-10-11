@@ -232,7 +232,7 @@ num_epochs = 10 #10
 batch_size = 100
 
 #############################################################################
-logs_path = '/tmp/tensorflow_logs/example'
+logs_path = '/home/tjdias/tensorflow_logs/example'
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", loss)
 # #Create a summary to monitor accuracy tensor
@@ -252,6 +252,7 @@ with tf.Session() as session:
 	
 	for epoch in range(num_epochs):
 		avg_cost = 0
+		train_pred = 0
 		num_steps = int(nmbTrainImg / batch_size)
 
 		for step in range(num_steps):
@@ -266,11 +267,14 @@ with tf.Session() as session:
 			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
 			_, l, predictions, summary = session.run(
 				[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
-			# valid = accuracy.run(valid_prediction.eval(), validClass)
+			# valid = accuracy.run(.eval(), validClass)
 			summary_writer.add_summary(summary, epoch * num_steps + step)
 			avg_cost += l / num_steps
+			train_pred = accuracy(predictions, batch_labels)
 
-		print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
+		print("Epoch:", '%d' % (epoch+1),\
+		 "Train loss=", "{:.3f}".format(avg_cost),\
+		 "Train Accuracy=", "{:.3f}".format(train_pred))
 		# valid = accuracy(valid_prediction.eval(), validClass)
 		# print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
 	# print("Optimization Finished!")
