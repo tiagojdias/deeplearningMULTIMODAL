@@ -89,7 +89,7 @@ trainClass = (np.arange(num_classes) == trainClass[:, None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:, None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:, None]).astype(np.float32)
 ###################################################################
-print('Training set', trainImgAux.shape, trainClass.shape)
+print('Training set', trainImg.shape, trainClass.shape)
 print('Validation set', validImg.shape, validClass.shape)
 print('Test set', testImg.shape, testClass.shape)
 

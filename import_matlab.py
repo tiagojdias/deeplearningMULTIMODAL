@@ -87,21 +87,28 @@ testClass = np.squeeze(np.asarray(testClass))
 trainClass = (np.arange(num_classes) == trainClass[:, None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:, None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:, None]).astype(np.float32)
+
 # #######################################################################
 # TensorFlow Graph
-def convolution_layer(
-	input, num_input_channels, filter_size, num_filters, use_pooling, use_relu):
-	# print (filter_size)
+def convolution_layer(input, num_input_channels, filter_size, \
+	num_filters, use_pooling, use_relu, is_train):
 	shape = [filter_size, filter_size, num_input_channels, num_filters]
 
-	weights = tf.get_variable(
-		"weights", shape, initializer=tf.random_normal_initializer(0, 0.01))
-    # Create variable named "biases".
-	biases = tf.get_variable(
-	    "biases", [num_filters], initializer=tf.constant_initializer(0.0))
+	if is_train == True:
+		with tf.variable_scope("w_and_b"):
+			weights = tf.get_variable(
+				"weights", shape, \
+				initializer=tf.random_normal_initializer(0, 0.01))
+		    # Create variable named "biases".
+			biases = tf.get_variable(
+			    "biases", [num_filters], \
+			    initializer=tf.constant_initializer(0.0))
+	else:
+		with tf.variable_scope("w_and_b", reuse = True):
+			weights = tf.get_variable("weights")
+			biases = tf.get_variable("biases")
 
 	layer = tf.nn.conv2d(input, weights, [1, 1, 1, 1], 'VALID') + biases
-	# print(layer)
 
 	if use_pooling:
 		layer = tf.nn.max_pool(layer, [1, 2, 2, 1], [1, 2, 2, 1], 'SAME')
@@ -109,8 +116,8 @@ def convolution_layer(
 	if use_relu:
 		layer = tf.nn.relu(layer)
 
-	# return weights,biases
-	return layer, weights
+	return layer
+
 def flaten_layer(layer):
 
 	layer_shape = layer.get_shape()
@@ -120,25 +127,30 @@ def flaten_layer(layer):
 	flat_layer = tf.reshape(layer, [-1, num_features])
 
 	return flat_layer, num_features
-def fc_layer(img, num_inputs, num_outputs, relu):  # Use Rectified Linear Unit (ReLU)?
 
+def fc_layer(img, num_inputs, num_outputs, relu, is_train):  # Use Rectified Linear Unit (ReLU)?
 	shape = [num_inputs, num_outputs]
 
-	weights = tf.get_variable(
-		"weights", shape, initializer=tf.random_normal_initializer(0, 0.01))
-	biases = tf.get_variable(
-	    "biases", [num_outputs], initializer=tf.constant_initializer(0.0))
+	if is_train == True:
+		with tf.variable_scope("w_and_b"):
+			weights = tf.get_variable(
+				"weights", shape, \
+				initializer=tf.random_normal_initializer(0, 0.01))
+			biases = tf.get_variable(
+			    "biases", [num_outputs], \
+			    initializer=tf.constant_initializer(0.0))
+	else:
+		with tf.variable_scope("w_and_b",reuse = True):
+			weights = tf.get_variable("weights")
+			biases = tf.get_variable("biases")
 
-    # Calculate the layer as the matrix multiplication of
-    # the input and weights, and then add the bias-values.
 	layer = tf.matmul(img, weights) + biases
 
-    # Use ReLU?
 	if relu:
 		layer = tf.nn.relu(layer)
 
 	return layer
-
+####################################################################
 # Convolutional layers and Full connected layer sizes
 # Convolutional layer 1
 filter_size1 = 5
@@ -152,75 +164,57 @@ num_channels2 = 50
 filter_size3 = 10
 num_channels3 = 500
 
-# Convolutional layer 4
-filter_size4 = 1
-num_channels4 = 500
-
-
-CASE = 1
+CASE = 2
 # tf_train_dataset = tf.placeholder(
 #     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
 timer = time.time()
 
-tf_train_dataset = tf.placeholder(tf.float32, shape=[None, imgSize, imgSize, num_channels])
-tf_train_labels = tf.placeholder(tf.float32, shape=[None, num_classes])
+tf_train_dataset = tf.placeholder(tf.float32, \
+	shape=[None, imgSize, imgSize, num_channels])
+tf_train_labels = tf.placeholder(tf.float32, \
+	shape=[None, num_classes])
 
-# if CASE == 1:
-# 	tf_valid_dataset = tf.constant(validImg)
-# 	# tf_test_dataset = tf.constant(testImg)
-# 	tf_test_dataset = tf.constant(testImg)
-# else:
-# 	tf_valid_dataset = tf.constant(validMask)
-# 	# tf_test_dataset = tf.constant(testImg)
-# 	tf_test_dataset = tf.constant(testMask)
+if CASE == 1:
+	tf_test_dataset = tf.constant(testImg)
+	tf_test_labels = tf.constant(testClass)
+else:
+	tf_test_dataset = tf.constant(testMask)
+	tf_test_labels = tf.constant(testClass)
+# print (tf_test_dataset.get_shape())
 
-
-print(tf_train_dataset)
-print (tf_valid_dataset)
-print (tf_test_dataset)
-
-
-def model(x):
+def model(x, is_train):
 	with tf.variable_scope("conv1"):
-		conv_layer1, conv_weights1 = convolution_layer(
-			x, num_channels, filter_size1, num_channels1, True, False)
+		conv_layer1 = convolution_layer(
+			x, num_channels, filter_size1, num_channels1,\
+			 True, False, is_train)
 	# print("Conv1 layer:", conv_layer1)
 
 	with tf.variable_scope("conv2"):
-		conv_layer2, conv_weights2 = convolution_layer(
-			conv_layer1, num_channels1, filter_size2, num_channels2, True, False)
+		conv_layer2 = convolution_layer(
+			conv_layer1, num_channels1, filter_size2, num_channels2, \
+			True, False, is_train)
 
 	# print("Conv2 layer:", conv_layer2)
 
 	with tf.variable_scope("conv3"):
-		conv_layer3, conv_weights3 = convolution_layer(
-			conv_layer2, num_channels2, filter_size3, num_channels3, False, True)
+		conv_layer3 = convolution_layer(
+			conv_layer2, num_channels2, filter_size3, num_channels3, \
+			False, True, is_train)
 	# print("Conv3 layer:", conv_layer3)
-
-	# with tf.variable_scope("conv4"):
-	# 	conv_layer4,conv_weights4 = convolution_layer(
-	# 		conv_layer3,num_channels3,filter_size4, num_classes, False,False)
-	# print (conv_layer4)
 
 	with tf.variable_scope("flat1"):
 		flat_layer, num_features = flaten_layer(conv_layer3)
-
 	# print("Flat layer:", flat_layer)
 
 	with tf.variable_scope("fcon1"):
 		fc_layer1 = fc_layer(
-		 	flat_layer, num_features, num_classes, False)
-	# print (fc_layer1)
-	# final_layer = fc_layer(
-	#  	flat_layer, num_channels3, num_classes, False)
-	# print("Final layer:",final_layer)
-	# return (flat_layer)
+		 	flat_layer, num_features, num_classes, False, is_train)
+
 	return (fc_layer1)
 
 # Training computation.
-with tf.variable_scope("my_model") as scope:
-	logits = model(tf_train_dataset)
-	
+logits = model(tf_train_dataset, True)
+
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
 
@@ -231,6 +225,8 @@ def accuracy(predictions, labels):
   return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
           / predictions.shape[0])
 
+train_prediction = tf.nn.softmax(logits)
+valid_prediction = tf.nn.softmax(model(tf_test_dataset, False))
 # Placeholder variables
 num_epochs = 10 #10
 batch_size = 100
@@ -273,23 +269,10 @@ with tf.Session() as session:
 			# valid = accuracy.run(valid_prediction.eval(), validClass)
 			summary_writer.add_summary(summary, epoch * num_steps + step)
 			avg_cost += l / num_steps
-		
-		# x.append(epoch+1)
-		# y.append(avg_cost)
-		# # z.append(5)
-		# axs.plot(x,y,'-b')
-		# # axs.plot(x,z,'-r')
-		# # axs.set_ylim([,10])
-		# # print (max(y))
-		# plt.ylim(0,max(y)+1)
-		# plt.xlabel('Epochs')
-		# plt.title('Average Loss')
-		# plt.grid('on')
-		# plt.pause(0.0001)
 
 		print("Epoch:", '%d' % (epoch+1), "Train loss=", "{:.3f}".format(avg_cost))
 		# valid = accuracy(valid_prediction.eval(), validClass)
 		# print("Epoch:", '%d' % (epoch+1), "Valid Accuracy=", "{:.3f}".format(valid))
 	# print("Optimization Finished!")
-	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
+	print('Test accuracy: %.3f%%' % accuracy(valid_prediction.eval(), testClass))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
