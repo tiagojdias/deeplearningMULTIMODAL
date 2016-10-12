@@ -178,7 +178,8 @@ num_channels3 = 500
 
 
 CASE = 2
-logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/example'
+# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/example'
+logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
 
 timer = time.time()
 
@@ -197,17 +198,20 @@ def model(x, is_train):
 		conv_layer1, weights1, biases1 = convolution_layer(
 			x, num_channels, filter_size1, num_channels1,\
 			 True, False, is_train)
-		# variable_summaries(weights1, 'conv1' + '/weights')
-		# variable_summaries(biases1, 'conv1' + '/biases')
+
+		variable_summaries(weights1, conv_layer1.name + '/weights')
+		variable_summaries(biases1, conv_layer1.name + '/biases')
 		# tf.scalar_summary("biases1", biases1)
+	# print (dir(conv_layer1))
+
 	# print("Conv1 layer:", conv_layer1)
 
 	with tf.variable_scope("conv2"):
 		conv_layer2,weights2, biases2 = convolution_layer(
 			conv_layer1, num_channels1, filter_size2, num_channels2, \
 			True, False, is_train)
-		# variable_summaries(weights2, 'conv2' + '/weights')
-		# variable_summaries(biases2, 'conv2' + '/biases')
+		variable_summaries(weights2, conv_layer2.name + '/weights')
+		variable_summaries(biases2, conv_layer2.name + '/biases')
 		# tf.scalar_summary("weights2", weights2)
 		# tf.scalar_summary("biases2", biases2)
 	# print("Conv2 layer:", conv_layer2)
@@ -216,8 +220,8 @@ def model(x, is_train):
 		conv_layer3, weights3, biases3 = convolution_layer(
 			conv_layer2, num_channels2, filter_size3, num_channels3, \
 			False, True, is_train)
-		# variable_summaries(weights3, 'conv3' + '/weights')
-		# variable_summaries(biases3, 'conv3' + '/biases')
+		variable_summaries(weights3, conv_layer3.name + '/weights')
+		variable_summaries(biases3, conv_layer3.name + '/biases')
 		# tf.scalar_summary("weights3", weights3)
 		# tf.scalar_summary("biases3", biases3)
 	# print("Conv3 layer:", conv_layer3)
@@ -229,10 +233,11 @@ def model(x, is_train):
 	with tf.variable_scope("fcon1"):
 		fc_layer1, weights4, biases4 = fc_layer(
 		 	flat_layer, num_features, num_classes, False, is_train)
-		# variable_summaries(weights4, 'fc1' + '/weights')
-		# variable_summaries(biases4, 'fc1' + '/biases')
+		variable_summaries(weights4, fc_layer1.name + '/weights')
+		variable_summaries(biases4, fc_layer1.name + '/biases')
 		# tf.scalar_summary("weights4", weights4)
 		# tf.scalar_summary("biases4", biases4)
+	# print("Final layer:", fc_layer1)
 	return (fc_layer1)
 
 # Training computation.
@@ -260,7 +265,7 @@ accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 #############################################################################
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
-# train_writer = tf.train.SummaryWriter(logs_path + '/train')
+train_writer = tf.train.SummaryWriter(logs_path + '/train')
 # valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
 # test_writer = tf.train.SummaryWriter(logs_path + '/test')
 ############################################################################
@@ -269,7 +274,7 @@ batch_size = 100
 
 with tf.Session() as session:
 	session.run(tf.initialize_all_variables())
-	summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+	# summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 	
 	for epoch in range(num_epochs):
 		avg_cost = 0
@@ -292,13 +297,13 @@ with tf.Session() as session:
 				[optimizer, loss, train_prediction, merged_summary_op],\
 				 feed_dict=feed_dict_train)
 			# valid = accuracy.run(.eval(), validClass)
-			# train_writer.add_summary(summary, epoch * num_steps + step)
+			train_writer.add_summary(summary, epoch * num_steps + step)
 			
 			avg_cost += l / num_steps
 			summary, train_pred = session.run(
 				[merged_summary_op,accuracy], feed_dict = feed_dict_train)
 
-			# train_writer.add_summary(summary,epoch * num_steps + step)
+			train_writer.add_summary(summary,epoch * num_steps + step)
 
 		if CASE ==1:
 			feed_dict_valid = {tf_test_dataset: validImg, \
