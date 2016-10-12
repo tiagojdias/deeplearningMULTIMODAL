@@ -197,8 +197,8 @@ def model(x, is_train):
 		conv_layer1, weights1, biases1 = convolution_layer(
 			x, num_channels, filter_size1, num_channels1,\
 			 True, False, is_train)
-		variable_summaries(weights1, 'conv1' + '/weights')
-		variable_summaries(weights1, 'conv1' + '/biases')
+		# variable_summaries(weights1, 'conv1' + '/weights')
+		# variable_summaries(biases1, 'conv1' + '/biases')
 		# tf.scalar_summary("biases1", biases1)
 	# print("Conv1 layer:", conv_layer1)
 
@@ -206,8 +206,8 @@ def model(x, is_train):
 		conv_layer2,weights2, biases2 = convolution_layer(
 			conv_layer1, num_channels1, filter_size2, num_channels2, \
 			True, False, is_train)
-		variable_summaries(weights2, 'conv2' + '/weights')
-		variable_summaries(weights2, 'conv2' + '/biases')
+		# variable_summaries(weights2, 'conv2' + '/weights')
+		# variable_summaries(biases2, 'conv2' + '/biases')
 		# tf.scalar_summary("weights2", weights2)
 		# tf.scalar_summary("biases2", biases2)
 	# print("Conv2 layer:", conv_layer2)
@@ -216,8 +216,8 @@ def model(x, is_train):
 		conv_layer3, weights3, biases3 = convolution_layer(
 			conv_layer2, num_channels2, filter_size3, num_channels3, \
 			False, True, is_train)
-		variable_summaries(weights2, 'conv3' + '/weights')
-		variable_summaries(weights2, 'conv3' + '/biases')
+		# variable_summaries(weights3, 'conv3' + '/weights')
+		# variable_summaries(biases3, 'conv3' + '/biases')
 		# tf.scalar_summary("weights3", weights3)
 		# tf.scalar_summary("biases3", biases3)
 	# print("Conv3 layer:", conv_layer3)
@@ -229,8 +229,8 @@ def model(x, is_train):
 	with tf.variable_scope("fcon1"):
 		fc_layer1, weights4, biases4 = fc_layer(
 		 	flat_layer, num_features, num_classes, False, is_train)
-		variable_summaries(weights2, 'fc1' + '/weights')
-		variable_summaries(weights2, 'fc1' + '/biases')
+		# variable_summaries(weights4, 'fc1' + '/weights')
+		# variable_summaries(biases4, 'fc1' + '/biases')
 		# tf.scalar_summary("weights4", weights4)
 		# tf.scalar_summary("biases4", biases4)
 	return (fc_layer1)
@@ -258,15 +258,13 @@ correct_prediction_test = tf.equal(tf.argmax(test_prediction, 1),\
 accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 
 #############################################################################
-# tf.scalar_summary("accuracy_test",accuracy_test)
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
-train_writer = tf.train.SummaryWriter(logs_path + '/train', sess.graph)
-valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
-test_writer = tf.train.SummaryWriter(logs_path + '/test')
-#
-#############################################################################
-num_epochs = 10 #10
+# train_writer = tf.train.SummaryWriter(logs_path + '/train')
+# valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
+# test_writer = tf.train.SummaryWriter(logs_path + '/test')
+############################################################################
+num_epochs = 10 
 batch_size = 100
 
 with tf.Session() as session:
@@ -294,11 +292,13 @@ with tf.Session() as session:
 				[optimizer, loss, train_prediction, merged_summary_op],\
 				 feed_dict=feed_dict_train)
 			# valid = accuracy.run(.eval(), validClass)
-			summary_writer.add_summary(summary, \
-				epoch * num_steps + step)
+			# train_writer.add_summary(summary, epoch * num_steps + step)
 			
 			avg_cost += l / num_steps
-			train_pred = accuracy.eval(feed_dict = feed_dict_train)
+			summary, train_pred = session.run(
+				[merged_summary_op,accuracy], feed_dict = feed_dict_train)
+
+			# train_writer.add_summary(summary,epoch * num_steps + step)
 
 		if CASE ==1:
 			feed_dict_valid = {tf_test_dataset: validImg, \
@@ -307,7 +307,12 @@ with tf.Session() as session:
 			feed_dict_valid = {tf_test_dataset: validMask, \
 			tf_test_labels : validClass}
 
+		# summary, valid = session.run(
+		# 	[merged_summary_op, accuracy_test], feed_dict = feed_dict_valid)
 		valid = accuracy_test.eval(feed_dict = feed_dict_valid)
+		
+		# valid_writer.add_summary(summary,epoch * num_steps + step)
+
 		print("Epoch:", '%d' % (epoch+1),\
 		 "Train loss=", "{:.3f}".format(avg_cost),\
 		 "Train Accuracy=", "{:.3f}".format(train_pred),\
@@ -318,5 +323,10 @@ with tf.Session() as session:
 	else:
 		feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
 	
-	print('Test accuracy: %.3f%%' % accuracy_test.eval(feed_dict = feed_dict_test))
+	test = accuracy_test.eval(feed_dict = feed_dict_test)
+	
+	# test_writer.add_summary(summary,epoch * num_steps + step)
+
+	print("Test accuracy: ", "{:.3f}".format(test))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
+	
