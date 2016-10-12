@@ -90,6 +90,18 @@ testClass = (np.arange(num_classes) == testClass[:, None]).astype(np.float32)
 
 # #######################################################################
 # TensorFlow Graph
+def variable_summaries(var, name):
+  """Attach a lot of summaries to a Tensor."""
+  with tf.name_scope('summaries'):
+    mean = tf.reduce_mean(var)
+    tf.scalar_summary('mean/' + name, mean)
+    with tf.name_scope('stddev'):
+      stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+    tf.scalar_summary('stddev/' + name, stddev)
+    tf.scalar_summary('max/' + name, tf.reduce_max(var))
+    tf.scalar_summary('min/' + name, tf.reduce_min(var))
+    tf.histogram_summary(name, var)
+
 def convolution_layer(input, num_input_channels, filter_size, \
 	num_filters, use_pooling, use_relu, is_train):
 	shape = [filter_size, filter_size, num_input_channels, num_filters]
@@ -116,7 +128,7 @@ def convolution_layer(input, num_input_channels, filter_size, \
 	if use_relu:
 		layer = tf.nn.relu(layer)
 
-	return layer
+	return layer, weights, biases
 
 def flaten_layer(layer):
 
@@ -149,7 +161,7 @@ def fc_layer(img, num_inputs, num_outputs, relu, is_train):  # Use Rectified Lin
 	if relu:
 		layer = tf.nn.relu(layer)
 
-	return layer
+	return layer, weights, biases
 ####################################################################
 # Convolutional layers and Full connected layer sizes
 #  Convolutional layer 1
@@ -164,9 +176,10 @@ num_channels2 = 50
 filter_size3 = 10
 num_channels3 = 500
 
+
 CASE = 2
-# tf_train_dataset = tf.placeholder(
-#     tf.float32, shape=(batch_size, image_size, image_size, num_channels))
+logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/example'
+
 timer = time.time()
 
 tf_train_dataset = tf.placeholder(tf.float32, \
@@ -179,36 +192,34 @@ tf_test_dataset = tf.placeholder(tf.float32,\
 tf_test_labels = tf.placeholder(tf.float32, \
 	shape=[None, num_classes])
 
-# if CASE == 1:
-# 	tf_valid_dataset = tf.constant(validImg)
-# 	tf_valid_labels = tf.constant(validClass)
-# 	tf_test_dataset = tf.constant(testImg)
-# 	tf_test_labels = tf.constant(testClass)
-# else:
-# 	tf_valid_dataset = tf.constant(validMask)
-# 	tf_valid_labels = tf.constant(validClass)
-# 	tf_test_dataset = tf.constant(testMask)
-# 	tf_test_labels = tf.constant(testClass)
-# print (tf_test_dataset.get_shape())
-
 def model(x, is_train):
 	with tf.variable_scope("conv1"):
-		conv_layer1 = convolution_layer(
+		conv_layer1, weights1, biases1 = convolution_layer(
 			x, num_channels, filter_size1, num_channels1,\
 			 True, False, is_train)
+		variable_summaries(weights1, 'conv1' + '/weights')
+		variable_summaries(weights1, 'conv1' + '/biases')
+		# tf.scalar_summary("biases1", biases1)
 	# print("Conv1 layer:", conv_layer1)
 
 	with tf.variable_scope("conv2"):
-		conv_layer2 = convolution_layer(
+		conv_layer2,weights2, biases2 = convolution_layer(
 			conv_layer1, num_channels1, filter_size2, num_channels2, \
 			True, False, is_train)
-
+		variable_summaries(weights2, 'conv2' + '/weights')
+		variable_summaries(weights2, 'conv2' + '/biases')
+		# tf.scalar_summary("weights2", weights2)
+		# tf.scalar_summary("biases2", biases2)
 	# print("Conv2 layer:", conv_layer2)
 
 	with tf.variable_scope("conv3"):
-		conv_layer3 = convolution_layer(
+		conv_layer3, weights3, biases3 = convolution_layer(
 			conv_layer2, num_channels2, filter_size3, num_channels3, \
 			False, True, is_train)
+		variable_summaries(weights2, 'conv3' + '/weights')
+		variable_summaries(weights2, 'conv3' + '/biases')
+		# tf.scalar_summary("weights3", weights3)
+		# tf.scalar_summary("biases3", biases3)
 	# print("Conv3 layer:", conv_layer3)
 
 	with tf.variable_scope("flat1"):
@@ -216,45 +227,47 @@ def model(x, is_train):
 	# print("Flat layer:", flat_layer)
 
 	with tf.variable_scope("fcon1"):
-		fc_layer1 = fc_layer(
+		fc_layer1, weights4, biases4 = fc_layer(
 		 	flat_layer, num_features, num_classes, False, is_train)
-
+		variable_summaries(weights2, 'fc1' + '/weights')
+		variable_summaries(weights2, 'fc1' + '/biases')
+		# tf.scalar_summary("weights4", weights4)
+		# tf.scalar_summary("biases4", biases4)
 	return (fc_layer1)
 
 # Training computation.
 logits = model(tf_train_dataset, True)
 
+train_prediction = tf.nn.softmax(logits)
+test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
+# test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
+
 loss = tf.reduce_mean(
 	tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+tf.scalar_summary("loss", loss)
 
 optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
+correct_prediction = tf.equal(tf.argmax(train_prediction, 1),\
+	tf.argmax(tf_train_labels, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+tf.scalar_summary("accuracy_train", accuracy)
 
-def accuracy(predictions, labels):
-  return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-          / predictions.shape[0])
-
-train_prediction = tf.nn.softmax(logits)
-valid_prediction = tf.nn.softmax(model(tf_valid_dataset, False))
-test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
-# Placeholder variables
-num_epochs = 10 #10
-batch_size = 100
+correct_prediction_test = tf.equal(tf.argmax(test_prediction, 1),\
+	tf.argmax(tf_test_labels, 1))
+accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 
 #############################################################################
-logs_path = '/home/tjdias/tensorflow_logs/example'
-# Create a summary to monitor cost tensor
-tf.scalar_summary("loss", loss)
-# #Create a summary to monitor accuracy tensor
-# tf.scalar_summary("accuracy", acc)
+# tf.scalar_summary("accuracy_test",accuracy_test)
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
+train_writer = tf.train.SummaryWriter(logs_path + '/train', sess.graph)
+valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
+test_writer = tf.train.SummaryWriter(logs_path + '/test')
+#
 #############################################################################
-# x = []
-# y = []
-# z = []
-# fig,axs = plt.subplots()
-# axs.set_xlim([1,10])
+num_epochs = 10 #10
+batch_size = 100
 
 with tf.Session() as session:
 	session.run(tf.initialize_all_variables())
@@ -274,19 +287,36 @@ with tf.Session() as session:
 				batch_data = trainMask[offset:(offset + batch_size), :, :, :]
 
 			batch_labels = trainClass[offset:(offset + batch_size), :]
-			feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
+			feed_dict_train = {tf_train_dataset: batch_data,\
+			 tf_train_labels: batch_labels}
+			
 			_, l, predictions, summary = session.run(
-				[optimizer, loss, train_prediction, merged_summary_op], feed_dict=feed_dict)
+				[optimizer, loss, train_prediction, merged_summary_op],\
+				 feed_dict=feed_dict_train)
 			# valid = accuracy.run(.eval(), validClass)
-			summary_writer.add_summary(summary, epoch * num_steps + step)
+			summary_writer.add_summary(summary, \
+				epoch * num_steps + step)
+			
 			avg_cost += l / num_steps
-			train_pred = accuracy(predictions, batch_labels)
+			train_pred = accuracy.eval(feed_dict = feed_dict_train)
 
-		valid = accuracy(valid_prediction.eval(), validClass)
+		if CASE ==1:
+			feed_dict_valid = {tf_test_dataset: validImg, \
+			tf_test_labels : validClass}
+		else:
+			feed_dict_valid = {tf_test_dataset: validMask, \
+			tf_test_labels : validClass}
+
+		valid = accuracy_test.eval(feed_dict = feed_dict_valid)
 		print("Epoch:", '%d' % (epoch+1),\
 		 "Train loss=", "{:.3f}".format(avg_cost),\
 		 "Train Accuracy=", "{:.3f}".format(train_pred),\
 		 "Valid Accuracy=", "{:.3f}".format(valid))
 	# print("Optimization Finished!")
-	print('Test accuracy: %.3f%%' % accuracy(test_prediction.eval(), testClass))
+	if CASE == 1:
+		feed_dict_test = {tf_test_dataset: testImg, tf_test_labels : testClass}
+	else:
+		feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
+	
+	print('Test accuracy: %.3f%%' % accuracy_test.eval(feed_dict = feed_dict_test))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
