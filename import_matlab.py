@@ -152,7 +152,7 @@ def fc_layer(img, num_inputs, num_outputs, relu, is_train):  # Use Rectified Lin
 	return layer
 ####################################################################
 # Convolutional layers and Full connected layer sizes
-# Convolutional layer 1
+#  Convolutional layer 1
 filter_size1 = 5
 num_channels1 = 20
 
