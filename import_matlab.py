@@ -174,16 +174,21 @@ tf_train_dataset = tf.placeholder(tf.float32, \
 tf_train_labels = tf.placeholder(tf.float32, \
 	shape=[None, num_classes])
 
-if CASE == 1:
-	tf_valid_dataset = tf.constant(validImg)
-	tf_valid_labels = tf.constant(validClass)
-	tf_test_dataset = tf.constant(testImg)
-	tf_test_labels = tf.constant(testClass)
-else:
-	tf_valid_dataset = tf.constant(validMask)
-	tf_valid_labels = tf.constant(validClass)
-	tf_test_dataset = tf.constant(testMask)
-	tf_test_labels = tf.constant(testClass)
+tf_test_dataset = tf.placeholder(tf.float32,\
+	shape=[None, imgSize, imgSize, num_channels])
+tf_test_labels = tf.placeholder(tf.float32, \
+	shape=[None, num_classes])
+
+# if CASE == 1:
+# 	tf_valid_dataset = tf.constant(validImg)
+# 	tf_valid_labels = tf.constant(validClass)
+# 	tf_test_dataset = tf.constant(testImg)
+# 	tf_test_labels = tf.constant(testClass)
+# else:
+# 	tf_valid_dataset = tf.constant(validMask)
+# 	tf_valid_labels = tf.constant(validClass)
+# 	tf_test_dataset = tf.constant(testMask)
+# 	tf_test_labels = tf.constant(testClass)
 # print (tf_test_dataset.get_shape())
 
 def model(x, is_train):
