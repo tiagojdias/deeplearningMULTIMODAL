@@ -185,7 +185,8 @@ logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
 
 # timer = time.time()
 
-tf_train_dataset = tf.placeholder(tf.float32,shape=[None, imgSize, imgSize, num_channels])
+tf_train_dataset = tf.placeholder(tf.float32, \
+  shape=[None, imgSize, imgSize, num_channels])
 tf_train_labels = tf.placeholder(tf.float32, \
   shape=[None, num_classes])
 
