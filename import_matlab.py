@@ -331,6 +331,11 @@ with tf.Session() as session:
 		 "Train loss=", "{:.3f}".format(avg_cost),\
 		 "Train Accuracy=", "{:.3f}".format(train_pred),\
 		 "Valid Accuracy=", "{:.3f}".format(valid))
+
+		save_path = saver.save(session, \
+			"/home/tjdias/Desktop/py_multimodal/model", \
+			global_step = epoch)
+		print("Model saved in file: %s" % save_path)
 	# print("Optimization Finished!")
 	if CASE == 1:
 		feed_dict_test = {tf_test_dataset: testImg, tf_test_labels : testClass}
@@ -343,6 +348,3 @@ with tf.Session() as session:
 
 	print("Test accuracy: ", "{:.3f}".format(test))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
-	save_path = saver.save(session, \
-		"/home/tjdias/Desktop/py_multimodal/model.ckpt")
-	print("Model saved in file: %s" % save_path)

@@ -280,13 +280,13 @@ saver = tf.train.Saver()
 with tf.Session() as session:
 
   session.run(init)
-  saver.restore(session, '/home/tjdias/Desktop/py_multimodal/model.ckpt')
+  # saver.restore(session, '/home/tjdias/Desktop/py_multimodal/model.ckpt')
 
   train_writer = tf.train.SummaryWriter(logs_path,
     graph=tf.get_default_graph())
 
   # print(saver.export_meta_graph())
-  saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model.ckpt")
+  saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model-1")
   # print("Model restored.")
   # summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
   
