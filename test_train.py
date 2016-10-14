@@ -274,7 +274,7 @@ num_epochs = 8
 batch_size = 100
 
 init = tf.initialize_all_variables()
-saver = tf.train.Saver(tf.trainable_variables())
+saver = tf.train.Saver(tf.all_variables())
 
 
 with tf.Session() as session:
@@ -288,8 +288,8 @@ with tf.Session() as session:
   # print(saver.export_meta_graph())
   # saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model-1")
 
-  saver.restore(session, "/home/tiago/Desktop/deeplearningMULTIMODAL/model-1")
-  
+  vars =saver.restore(session, "/home/tiago/Desktop/deeplearningMULTIMODAL/model-1")
+  print(vars)
   # print("Model restored.")
   # summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
   

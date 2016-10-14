@@ -277,7 +277,7 @@ num_epochs = 2
 batch_size = 100
 
 init = tf.initialize_all_variables()
-saver = tf.train.Saver(tf.trainable_variables())
+saver = tf.train.Saver()
 
 
 with tf.Session() as session:
