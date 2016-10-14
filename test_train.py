@@ -31,7 +31,6 @@ trainImgAux = mat_contents['trainImg']
 trainMaskAux = mat_contents['trainMask']
 trainClass = mat_contents['trainClass']
 
-
 mat_contents = sio.loadmat('Val_stuff.mat')
 # print(mat_contents.keys())
 validImgAux = mat_contents['valImg']
@@ -269,7 +268,7 @@ accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
 
-# test_writer = tf.train.SummaryWriter(logs_path + '/test')
+test_writer = tf.train.SummaryWriter(logs_path + '/test_load')
 ############################################################################
 num_epochs = 8
 batch_size = 100
@@ -286,10 +285,8 @@ with tf.Session() as session:
   train_writer = tf.train.SummaryWriter(logs_path,
     graph=tf.get_default_graph())
 
-
-  
   # print(saver.export_meta_graph())
-  # saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model.ckpt")
+  saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model.ckpt")
   # print("Model restored.")
   # summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
   

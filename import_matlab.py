@@ -281,7 +281,7 @@ saver = tf.train.Saver()
 
 with tf.Session() as session:
 	session.run(init)
-	train_writer = tf.train.SummaryWriter(logs_path + '/train',\
+	train_writer = tf.train.SummaryWriter(logs_path + '/train_save',\
 	 graph=tf.get_default_graph())
 	# summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 	
