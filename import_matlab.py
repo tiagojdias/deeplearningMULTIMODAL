@@ -240,7 +240,7 @@ def model(x, is_train):
 		variable_summaries(tf_biases4, fc_layer1.name + '/biases')
 		# tf.scalar_summary("weights4", weights4)
 		# tf.scalar_summary("biases4", biases4)
-	# print("Final layer:", fc_layer1)
+	print("Final layer:", fc_layer1)
 	return (fc_layer1)
 
 # Training computation.
@@ -272,7 +272,7 @@ merged_summary_op = tf.merge_all_summaries()
 # valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
 # test_writer = tf.train.SummaryWriter(logs_path + '/test')
 ############################################################################
-num_epochs = 10 
+num_epochs = 2
 batch_size = 100
 
 init = tf.initialize_all_variables()
