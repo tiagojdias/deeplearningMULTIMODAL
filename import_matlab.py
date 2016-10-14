@@ -178,11 +178,12 @@ num_channels3 = 500
 
 
 CASE = 2
-saver_path = "/home/tjdias/Desktop/py_multimodal/"
+# saver_path = "/home/tjdias/Desktop/py_multimodal/work/"
+saver_path = "/home/tiago/Desktop/deeplearningMULTIMODAL/home/"
 #Work path to save the Tensorboard variables
-logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
+# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
 # #Home pah to save the Tensorboard variables
-# logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
+logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/home/'
 
 timer = time.time()
 
@@ -276,7 +277,7 @@ num_epochs = 2
 batch_size = 100
 
 init = tf.initialize_all_variables()
-saver = tf.train.Saver()
+saver = tf.train.Saver(tf.trainable_variables())
 
 
 with tf.Session() as session:
@@ -332,8 +333,14 @@ with tf.Session() as session:
 		 "Train Accuracy=", "{:.3f}".format(train_pred),\
 		 "Valid Accuracy=", "{:.3f}".format(valid))
 
+
+		#WORK DIR
+		# save_path = saver.save(session, \
+		# 	"/home/tjdias/Desktop/py_multimodal/model", \
+		# 	global_step = epoch)
+		#HOME DIR
 		save_path = saver.save(session, \
-			"/home/tjdias/Desktop/py_multimodal/model", \
+			"/home/tiago/Desktop/deeplearningMULTIMODAL/model", \
 			global_step = epoch)
 		print("Model saved in file: %s" % save_path)
 	# print("Optimization Finished!")

@@ -179,9 +179,9 @@ num_channels3 = 500
 CASE = 2
 # saver_path = "/home/tjdias/Desktop/py_multimodal/"
 # #Work path to save the Tensorboard variables
-logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
+# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
 # #Home pah to save the Tensorboard variables
-# logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
+logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/home/'
 
 # timer = time.time() 
 
@@ -274,7 +274,7 @@ num_epochs = 8
 batch_size = 100
 
 init = tf.initialize_all_variables()
-saver = tf.train.Saver()
+saver = tf.train.Saver(tf.trainable_variables())
 
 
 with tf.Session() as session:
@@ -286,64 +286,67 @@ with tf.Session() as session:
     graph=tf.get_default_graph())
 
   # print(saver.export_meta_graph())
-  saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model-1")
+  # saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model-1")
+
+  saver.restore(session, "/home/tiago/Desktop/deeplearningMULTIMODAL/model-1")
+  
   # print("Model restored.")
   # summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
   
-  for epoch in range(num_epochs):
-    avg_cost = 0
-    train_pred = 0
-    num_steps = int(nmbTrainImg / batch_size)
+  # for epoch in range(num_epochs):
+  #   avg_cost = 0
+  #   train_pred = 0
+  #   num_steps = int(nmbTrainImg / batch_size)
 
-    for step in range(num_steps):
-      offset = (step * batch_size) % (1023 - batch_size)
+  #   for step in range(num_steps):
+  #     offset = (step * batch_size) % (1023 - batch_size)
 
-      if CASE == 1:
-        batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-      else:
-        batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+  #     if CASE == 1:
+  #       batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+  #     else:
+  #       batch_data = trainMask[offset:(offset + batch_size), :, :, :]
 
-      batch_labels = trainClass[offset:(offset + batch_size), :]
-      feed_dict_train = {tf_train_dataset: batch_data,\
-       tf_train_labels: batch_labels}
+  #     batch_labels = trainClass[offset:(offset + batch_size), :]
+  #     feed_dict_train = {tf_train_dataset: batch_data,\
+  #      tf_train_labels: batch_labels}
       
-      _, l, predictions, summary = session.run(
-        [optimizer, loss, train_prediction, merged_summary_op],\
-         feed_dict=feed_dict_train)
-      # valid = accuracy.run(.eval(), validClass)
-      train_writer.add_summary(summary, epoch * num_steps + step)
+  #     _, l, predictions, summary = session.run(
+  #       [optimizer, loss, train_prediction, merged_summary_op],\
+  #        feed_dict=feed_dict_train)
+  #     # valid = accuracy.run(.eval(), validClass)
+  #     train_writer.add_summary(summary, epoch * num_steps + step)
       
-      avg_cost += l / num_steps
-      summary, train_pred = session.run(
-        [merged_summary_op,accuracy], feed_dict = feed_dict_train)
+  #     avg_cost += l / num_steps
+  #     summary, train_pred = session.run(
+  #       [merged_summary_op,accuracy], feed_dict = feed_dict_train)
 
-      train_writer.add_summary(summary,epoch * num_steps + step)
+  #     train_writer.add_summary(summary,epoch * num_steps + step)
 
-    if CASE ==1:
-      feed_dict_valid = {tf_test_dataset: validImg, \
-      tf_test_labels : validClass}
-    else:
-      feed_dict_valid = {tf_test_dataset: validMask, \
-      tf_test_labels : validClass}
+  #   if CASE ==1:
+  #     feed_dict_valid = {tf_test_dataset: validImg, \
+  #     tf_test_labels : validClass}
+  #   else:
+  #     feed_dict_valid = {tf_test_dataset: validMask, \
+  #     tf_test_labels : validClass}
 
-    # summary, valid = session.run(
-    #   [merged_summary_op, accuracy_test], feed_dict = feed_dict_valid)
-    valid = accuracy_test.eval(feed_dict = feed_dict_valid)
+  #   # summary, valid = session.run(
+  #   #   [merged_summary_op, accuracy_test], feed_dict = feed_dict_valid)
+  #   valid = accuracy_test.eval(feed_dict = feed_dict_valid)
     
-    # valid_writer.add_summary(summary,epoch * num_steps + step)
+  #   # valid_writer.add_summary(summary,epoch * num_steps + step)
 
-    print("Epoch:", '%d' % (epoch+1),\
-     "Train loss=", "{:.3f}".format(avg_cost),\
-     "Train Accuracy=", "{:.3f}".format(train_pred),\
-     "Valid Accuracy=", "{:.3f}".format(valid))
-  # print("Optimization Finished!")
-  if CASE == 1:
-    feed_dict_test = {tf_test_dataset: testImg, tf_test_labels : testClass}
-  else:
-    feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
+  #   print("Epoch:", '%d' % (epoch+1),\
+  #    "Train loss=", "{:.3f}".format(avg_cost),\
+  #    "Train Accuracy=", "{:.3f}".format(train_pred),\
+  #    "Valid Accuracy=", "{:.3f}".format(valid))
+  # # print("Optimization Finished!")
+  # if CASE == 1:
+  #   feed_dict_test = {tf_test_dataset: testImg, tf_test_labels : testClass}
+  # else:
+  #   feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
   
-  test = accuracy_test.eval(feed_dict = feed_dict_test)
+  # test = accuracy_test.eval(feed_dict = feed_dict_test)
   
-  # test_writer.add_summary(summary,epoch * num_steps + step)
+  # # test_writer.add_summary(summary,epoch * num_steps + step)
 
-  print("Test accuracy: ", "{:.3f}".format(test))
+  # print("Test accuracy: ", "{:.3f}".format(test))
