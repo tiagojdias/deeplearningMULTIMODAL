@@ -10,11 +10,6 @@ import random
 import math
 import scipy.io as sio
 
-import tflearn
-from tflearn.layers.core import input_data, dropout, fully_connected, flatten
-from tflearn.layers.conv import conv_2d, max_pool_2d
-from tflearn.layers.normalization import local_response_normalization
-from tflearn.layers.estimator import regression
 
 # Image Definition
 imgSize = 56
@@ -69,6 +64,10 @@ testImg = np.zeros(
 testMask = np.zeros(
   [testMaskAux.shape[2], imgSize, imgSize, num_channels], dtype="float32")
 
+# print(trainImg.shape, trainMask.shape)
+# print(validImg.shape, validMask.shape)
+# print(testImg.shape, testMask.shape)
+
 for idx1 in range(nmbTrainImg):
   trainImg[idx1, :, :, 0] = trainImgAux[:, :, idx1]
   trainMask[idx1, :, :, 0] = trainMaskAux[:, :, idx1]
@@ -88,106 +87,280 @@ testClass = np.squeeze(np.asarray(testClass))
 trainClass = (np.arange(num_classes) == trainClass[:, None]).astype(np.float32)
 validClass = (np.arange(num_classes) == validClass[:, None]).astype(np.float32)
 testClass = (np.arange(num_classes) == testClass[:, None]).astype(np.float32)
-###################################################################
-print('Training set', trainImg.shape, trainClass.shape)
-print('Validation set', validImg.shape, validClass.shape)
-print('Test set', testImg.shape, testClass.shape)
+
+# # #######################################################################
+# TensorFlow Graph
+def variable_summaries(var, name):
+  """Attach a lot of summaries to a Tensor."""
+  with tf.name_scope('summaries'):
+    mean = tf.reduce_mean(var)
+    tf.scalar_summary('mean/' + name, mean)
+    with tf.name_scope('stddev'):
+      stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+    tf.scalar_summary('stddev/' + name, stddev)
+    tf.scalar_summary('max/' + name, tf.reduce_max(var))
+    tf.scalar_summary('min/' + name, tf.reduce_min(var))
+    tf.histogram_summary(name, var)
+
+def convolution_layer(input, num_input_channels, filter_size, \
+  num_filters, use_pooling, use_relu, is_train):
+  shape = [filter_size, filter_size, num_input_channels, num_filters]
+
+  if is_train == True:
+    with tf.variable_scope("w_and_b"):
+      tf_weights = tf.get_variable(
+        "weights", shape, \
+        initializer=tf.random_normal_initializer(0, 0.01))
+        # Create variable named "biases".
+      tf_biases = tf.get_variable(
+          "biases", [num_filters], \
+          initializer=tf.constant_initializer(0.0))
+  else:
+    with tf.variable_scope("w_and_b", reuse = True):
+      tf_weights = tf.get_variable("weights")
+      tf_biases = tf.get_variable("biases")
+
+  layer = tf.nn.conv2d(input, tf_weights, [1, 1, 1, 1], 'VALID') + tf_biases
+
+  if use_pooling:
+    layer = tf.nn.max_pool(layer, [1, 2, 2, 1], [1, 2, 2, 1], 'SAME')
+
+  if use_relu:
+    layer = tf.nn.relu(layer)
+
+  return layer, tf_weights, tf_biases
+
+def flaten_layer(layer):
+
+  layer_shape = layer.get_shape()
+  # Input shape is assumed to be as:
+  #[num_images, img_height,img_width,num_channels]
+  num_features = layer_shape[1:4].num_elements()
+  flat_layer = tf.reshape(layer, [-1, num_features])
+
+  return flat_layer, num_features
+
+def fc_layer(img, num_inputs, num_outputs, relu, is_train): 
+  shape = [num_inputs, num_outputs]
+
+  if is_train == True:
+    with tf.variable_scope("w_and_b"):
+      tf_weights = tf.get_variable(
+        "weights", shape, \
+        initializer=tf.random_normal_initializer(0, 0.01))
+      tf_biases = tf.get_variable(
+          "biases", [num_outputs], \
+          initializer=tf.constant_initializer(0.0))
+  else:
+    with tf.variable_scope("w_and_b",reuse = True):
+      tf_weights = tf.get_variable("weights")
+      tf_biases = tf.get_variable("biases")
+
+  layer = tf.matmul(img, tf_weights) + tf_biases
+
+  if relu:
+    layer = tf.nn.relu(layer)
+
+  return layer, tf_weights, tf_biases
+####################################################################
+# Convolutional layers and Full connected layer sizes
+#  Convolutional layer 1
+filter_size1 = 5
+num_channels1 = 20
+
+# Convolutional layer 2
+filter_size2 = 7
+num_channels2 = 50
+
+# Convolutional layer 3
+filter_size3 = 10
+num_channels3 = 500
 
 
-x = tf.placeholder(tf.float32,  shape=[None, imgSize, imgSize,\
-  num_channels])
-y_ = tf.placeholder(tf.float32, shape=[None, num_classes])
+CASE = 2
+# saver_path = "/home/tjdias/Desktop/py_multimodal/"
+# #Work path to save the Tensorboard variables
+logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
+# #Home pah to save the Tensorboard variables
+# logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
 
-def weight_variable(shape):
-  initial = tf.truncated_normal(shape, stddev = 0.01)
-  return tf.Variable(initial)
+# timer = time.time()
 
-def bias_variable(shape):
-  initial = tf.constant(0.1, shape = shape)
-  return tf.Variable(initial)
+tf_train_dataset = tf.placeholder(tf.float32, \
+  shape=[None, imgSize, imgSize, num_channels])
+tf_train_labels = tf.placeholder(tf.float32, \
+  shape=[None, num_classes])
 
-def conv2d (x, W):
-  return tf.nn.conv2d(x, W, strides = [1,1,1,1], padding = "VALID")
+tf_test_dataset = tf.placeholder(tf.float32,\
+  shape=[None, imgSize, imgSize, num_channels])
+tf_test_labels = tf.placeholder(tf.float32, \
+  shape=[None, num_classes])
 
-def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize= [1,2,2,1], strides = [1,2,2,1]\
-    , padding ="SAME" )
+def model(x, is_train):
+  with tf.variable_scope("conv1"):
+    conv_layer1, tf_weights1, tf_biases1 = convolution_layer(
+      x, num_channels, filter_size1, num_channels1,\
+       True, False, is_train)
 
-W_conv1 = weight_variable([5,5,1,20])
-b_conv1 = bias_variable([20])
+    variable_summaries(tf_weights1, conv_layer1.name + '/weights')
+    variable_summaries(tf_biases1, conv_layer1.name + '/biases')
+    # tf.scalar_summary("biases1", biases1)
+  # print (dir(conv_layer1))
 
-# x_image = tf.reshape(x, [-1,28,28,1])
+  # print("Conv1 layer:", conv_layer1)
 
-h_conv1 = conv2d(x,W_conv1) + b_conv1
-print(h_conv1)
-h_pool1 = max_pool_2x2(h_conv1)
-print(h_pool1)
+  with tf.variable_scope("conv2"):
+    conv_layer2, tf_weights2, tf_biases2 = convolution_layer(
+      conv_layer1, num_channels1, filter_size2, num_channels2, \
+      True, False, is_train)
+    variable_summaries(tf_weights2, conv_layer2.name + '/weights')
+    variable_summaries(tf_biases2, conv_layer2.name + '/biases')
+    # tf.scalar_summary("weights2", weights2)
+    # tf.scalar_summary("biases2", biases2)
+  # print("Conv2 layer:", conv_layer2)
 
-W_conv2 = weight_variable([7,7,20,50])
-b_conv2 = bias_variable([50])
+  with tf.variable_scope("conv3"):
+    conv_layer3, tf_weights3, tf_biases3 = convolution_layer(
+      conv_layer2, num_channels2, filter_size3, num_channels3, \
+      False, True, is_train)
+    variable_summaries(tf_weights3, conv_layer3.name + '/weights')
+    variable_summaries(tf_biases3, conv_layer3.name + '/biases')
+    # tf.scalar_summary("weights3", weights3)
+    # tf.scalar_summary("biases3", biases3)
+  # print("Conv3 layer:", conv_layer3)
 
-h_conv2 = conv2d(h_pool1,W_conv2) + b_conv2
-print(h_conv2)
-h_pool2 = max_pool_2x2(h_conv2)
-print(h_pool2)
+  with tf.variable_scope("flat1"):
+    flat_layer, num_features = flaten_layer(conv_layer3)
+  # print("Flat layer:", flat_layer)
 
-W_conv3 = weight_variable([10,10,50,500])
-b_conv3 = bias_variable([500])
+  with tf.variable_scope("fcon1"):
+    fc_layer1, tf_weights4, tf_biases4 = fc_layer(
+      flat_layer, num_features, num_classes, False, is_train)
+    variable_summaries(tf_weights4, fc_layer1.name + '/weights')
+    variable_summaries(tf_biases4, fc_layer1.name + '/biases')
+    # tf.scalar_summary("weights4", weights4)
+    # tf.scalar_summary("biases4", biases4)
+  # print("Final layer:", fc_layer1)
+  return (fc_layer1)
 
-h_conv3 = tf.nn.relu(conv2d(h_pool2,W_conv3) + b_conv3)
-print(h_conv3)
+# Training computation.
+logits = model(tf_train_dataset, True)
 
-h_conv3_flat = tf.reshape(h_conv3,[-1, 1*1*500])
-print(h_conv3_flat)
+train_prediction = tf.nn.softmax(logits)
+test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
+# test_prediction = tf.nn.softmax(model(tf_test_dataset, False))
 
-W_fc1 = weight_variable([500,3])
-b_fc1 = bias_variable([3])
+loss = tf.reduce_mean(
+  tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+tf.scalar_summary("loss", loss)
 
-y_conv = tf.nn.softmax(tf.matmul(h_conv3_flat,W_fc1) + b_fc1)
-print(y_conv)
+optimizer = tf.train.AdamOptimizer(1e-3).minimize(loss)
 
+correct_prediction = tf.equal(tf.argmax(train_prediction, 1),\
+  tf.argmax(tf_train_labels, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+tf.scalar_summary("accuracy_train", accuracy)
 
+correct_prediction_test = tf.equal(tf.argmax(test_prediction, 1),\
+  tf.argmax(tf_test_labels, 1))
+accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 
-# w_fc1 = weight_variable([7*7*64,1024])
-# b_fc1 = bias_variable([1024])
+#############################################################################
+# Merge all summaries into a single op
+merged_summary_op = tf.merge_all_summaries()
 
-# h_pool2_flat = tf.reshape(h_pool2,[-1, 7*7*64])
-# print(h_pool2_flat)
-# h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat,w_fc1) + b_fc1)
-# print(h_fc1)
-
-keep_prob = tf.placeholder(tf.float32)
-# h_fc1_drop = tf.nn.dropout(h_fc1,keep_prob)
-
-
-# W_fc2 = weight_variable([1024,10])
-# b_fc2 = bias_variable([10])
-
-# y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop,W_fc2) + b_fc2)
-# print(y_conv)
-
+# valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
+# test_writer = tf.train.SummaryWriter(logs_path + '/test')
+############################################################################
+num_epochs = 10 
 batch_size = 100
 
-cross_entropy = tf.reduce_mean(-tf.reduce_sum(
-  y_ * tf.log(y_conv), reduction_indices = [1]))
-train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
-correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+init = tf.initialize_all_variables()
+saver = tf.train.Saver()
 
-with tf.Session() as sess:
-  sess.run(tf.initialize_all_variables())
-  for i in range(200):
-    # batch = mnist.train.next_batch(50)
-    offset = (i * batch_size) % (trainClass.shape[0] - batch_size)
-    batch_data = trainImg[offset:(offset + batch_size), :, :, :]
-    batch_labels = trainClass[offset:(offset + batch_size), :]
+
+with tf.Session() as session:
+
+  saver.restore(session, '/home/tjdias/Desktop/py_multimodal/model.ckpt')
+  vars = session.run(tf.all_variables())
+  
+  print(vars[0])
+  print(vars[1])
+  # print(vars[0].shape)
+  # print(vars[1].shape)
+  # print(vars[2].shape)
+  # print(vars[3].shape)
+  # print(vars[4].shape)
+  # print(vars[5].shape)
+  # print(vars[6].shape)
+  # print(vars[7].shape)
+  # print(vars[8].shape)
+  # print(vars[9].shape)
+  # train_writer = tf.train.SummaryWriter(logs_path,\
+  #  graph=tf.get_default_graph())
+
+
+  
+  # print(saver.export_meta_graph())
+  # saver.restore(session, "/home/tjdias/Desktop/py_multimodal/model.ckpt")
+  # print("Model restored.")
+  # summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+  
+  # for epoch in range(num_epochs):
+  #   avg_cost = 0
+  #   train_pred = 0
+  #   num_steps = int(nmbTrainImg / batch_size)
+
+  #   for step in range(num_steps):
+  #     offset = (step * batch_size) % (1023 - batch_size)
+
+  #     if CASE == 1:
+  #       batch_data = trainImg[offset:(offset + batch_size), :, :, :]
+  #     else:
+  #       batch_data = trainMask[offset:(offset + batch_size), :, :, :]
+
+  #     batch_labels = trainClass[offset:(offset + batch_size), :]
+  #     feed_dict_train = {tf_train_dataset: batch_data,\
+  #      tf_train_labels: batch_labels}
+      
+  #     _, l, predictions, summary = session.run(
+  #       [optimizer, loss, train_prediction, merged_summary_op],\
+  #        feed_dict=feed_dict_train)
+  #     # valid = accuracy.run(.eval(), validClass)
+  #     train_writer.add_summary(summary, epoch * num_steps + step)
+      
+  #     avg_cost += l / num_steps
+  #     summary, train_pred = session.run(
+  #       [merged_summary_op,accuracy], feed_dict = feed_dict_train)
+
+  #     train_writer.add_summary(summary,epoch * num_steps + step)
+
+  #   if CASE ==1:
+  #     feed_dict_valid = {tf_test_dataset: validImg, \
+  #     tf_test_labels : validClass}
+  #   else:
+  #     feed_dict_valid = {tf_test_dataset: validMask, \
+  #     tf_test_labels : validClass}
+
+  #   # summary, valid = session.run(
+  #   #   [merged_summary_op, accuracy_test], feed_dict = feed_dict_valid)
+  #   valid = accuracy_test.eval(feed_dict = feed_dict_valid)
     
+  #   # valid_writer.add_summary(summary,epoch * num_steps + step)
 
-    if i%10 == 0:
-      train_accuracy = accuracy.eval(
-        feed_dict={x:batch_data, y_:batch_labels, keep_prob: 0.0})
-      print ("step %d, training accuracy %g"%(i,train_accuracy))
-    train_step.run(feed_dict={x: batch_data, y_:batch_labels, keep_prob: 0.0})
+  #   print("Epoch:", '%d' % (epoch+1),\
+  #    "Train loss=", "{:.3f}".format(avg_cost),\
+  #    "Train Accuracy=", "{:.3f}".format(train_pred),\
+  #    "Valid Accuracy=", "{:.3f}".format(valid))
+  # # print("Optimization Finished!")
+  # if CASE == 1:
+  #   feed_dict_test = {tf_test_dataset: testImg, tf_test_labels : testClass}
+  # else:
+  #   feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
+  
+  # test = accuracy_test.eval(feed_dict = feed_dict_test)
+  
+  # # test_writer.add_summary(summary,epoch * num_steps + step)
 
-  print ("test accuracy %g" %accuracy.eval(
-    feed_dict={x:testImg, y_: testClass, keep_prob: 0.0}))
+  # print("Test accuracy: ", "{:.3f}".format(test))
+  # print("Elapsed time is " + str(time.time() - timer) + " seconds.")
