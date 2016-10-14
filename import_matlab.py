@@ -108,19 +108,19 @@ def convolution_layer(input, num_input_channels, filter_size, \
 
 	if is_train == True:
 		with tf.variable_scope("w_and_b"):
-			weights = tf.get_variable(
+			tf_weights = tf.get_variable(
 				"weights", shape, \
 				initializer=tf.random_normal_initializer(0, 0.01))
 		    # Create variable named "biases".
-			biases = tf.get_variable(
+			tf_biases = tf.get_variable(
 			    "biases", [num_filters], \
 			    initializer=tf.constant_initializer(0.0))
 	else:
 		with tf.variable_scope("w_and_b", reuse = True):
-			weights = tf.get_variable("weights")
-			biases = tf.get_variable("biases")
+			tf_weights = tf.get_variable("weights")
+			tf_biases = tf.get_variable("biases")
 
-	layer = tf.nn.conv2d(input, weights, [1, 1, 1, 1], 'VALID') + biases
+	layer = tf.nn.conv2d(input, tf_weights, [1, 1, 1, 1], 'VALID') + tf_biases
 
 	if use_pooling:
 		layer = tf.nn.max_pool(layer, [1, 2, 2, 1], [1, 2, 2, 1], 'SAME')
@@ -128,7 +128,7 @@ def convolution_layer(input, num_input_channels, filter_size, \
 	if use_relu:
 		layer = tf.nn.relu(layer)
 
-	return layer, weights, biases
+	return layer, tf_weights, tf_biases
 
 def flaten_layer(layer):
 
@@ -145,23 +145,23 @@ def fc_layer(img, num_inputs, num_outputs, relu, is_train):  # Use Rectified Lin
 
 	if is_train == True:
 		with tf.variable_scope("w_and_b"):
-			weights = tf.get_variable(
+			tf_weights = tf.get_variable(
 				"weights", shape, \
 				initializer=tf.random_normal_initializer(0, 0.01))
-			biases = tf.get_variable(
+			tf_biases = tf.get_variable(
 			    "biases", [num_outputs], \
 			    initializer=tf.constant_initializer(0.0))
 	else:
 		with tf.variable_scope("w_and_b",reuse = True):
-			weights = tf.get_variable("weights")
-			biases = tf.get_variable("biases")
+			tf_weights = tf.get_variable("weights")
+			tf_biases = tf.get_variable("biases")
 
-	layer = tf.matmul(img, weights) + biases
+	layer = tf.matmul(img, tf_weights) + tf_biases
 
 	if relu:
 		layer = tf.nn.relu(layer)
 
-	return layer, weights, biases
+	return layer, tf_weights, tf_biases
 ####################################################################
 # Convolutional layers and Full connected layer sizes
 #  Convolutional layer 1
@@ -178,8 +178,11 @@ num_channels3 = 500
 
 
 CASE = 2
-# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/example'
-logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
+saver_path = "/home/tjdias/Desktop/py_multimodal/"
+#Work path to save the Tensorboard variables
+logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
+# #Home pah to save the Tensorboard variables
+# logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/'
 
 timer = time.time()
 
@@ -195,33 +198,33 @@ tf_test_labels = tf.placeholder(tf.float32, \
 
 def model(x, is_train):
 	with tf.variable_scope("conv1"):
-		conv_layer1, weights1, biases1 = convolution_layer(
+		conv_layer1, tf_weights1, tf_biases1 = convolution_layer(
 			x, num_channels, filter_size1, num_channels1,\
 			 True, False, is_train)
 
-		variable_summaries(weights1, conv_layer1.name + '/weights')
-		variable_summaries(biases1, conv_layer1.name + '/biases')
+		variable_summaries(tf_weights1, conv_layer1.name + '/weights')
+		variable_summaries(tf_biases1, conv_layer1.name + '/biases')
 		# tf.scalar_summary("biases1", biases1)
 	# print (dir(conv_layer1))
 
 	# print("Conv1 layer:", conv_layer1)
 
 	with tf.variable_scope("conv2"):
-		conv_layer2,weights2, biases2 = convolution_layer(
+		conv_layer2, tf_weights2, tf_biases2 = convolution_layer(
 			conv_layer1, num_channels1, filter_size2, num_channels2, \
 			True, False, is_train)
-		variable_summaries(weights2, conv_layer2.name + '/weights')
-		variable_summaries(biases2, conv_layer2.name + '/biases')
+		variable_summaries(tf_weights2, conv_layer2.name + '/weights')
+		variable_summaries(tf_biases2, conv_layer2.name + '/biases')
 		# tf.scalar_summary("weights2", weights2)
 		# tf.scalar_summary("biases2", biases2)
 	# print("Conv2 layer:", conv_layer2)
 
 	with tf.variable_scope("conv3"):
-		conv_layer3, weights3, biases3 = convolution_layer(
+		conv_layer3, tf_weights3, tf_biases3 = convolution_layer(
 			conv_layer2, num_channels2, filter_size3, num_channels3, \
 			False, True, is_train)
-		variable_summaries(weights3, conv_layer3.name + '/weights')
-		variable_summaries(biases3, conv_layer3.name + '/biases')
+		variable_summaries(tf_weights3, conv_layer3.name + '/weights')
+		variable_summaries(tf_biases3, conv_layer3.name + '/biases')
 		# tf.scalar_summary("weights3", weights3)
 		# tf.scalar_summary("biases3", biases3)
 	# print("Conv3 layer:", conv_layer3)
@@ -231,10 +234,10 @@ def model(x, is_train):
 	# print("Flat layer:", flat_layer)
 
 	with tf.variable_scope("fcon1"):
-		fc_layer1, weights4, biases4 = fc_layer(
+		fc_layer1, tf_weights4, tf_biases4 = fc_layer(
 		 	flat_layer, num_features, num_classes, False, is_train)
-		variable_summaries(weights4, fc_layer1.name + '/weights')
-		variable_summaries(biases4, fc_layer1.name + '/biases')
+		variable_summaries(tf_weights4, fc_layer1.name + '/weights')
+		variable_summaries(tf_biases4, fc_layer1.name + '/biases')
 		# tf.scalar_summary("weights4", weights4)
 		# tf.scalar_summary("biases4", biases4)
 	# print("Final layer:", fc_layer1)
@@ -265,15 +268,21 @@ accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
 #############################################################################
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
-train_writer = tf.train.SummaryWriter(logs_path + '/train')
+
 # valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
 # test_writer = tf.train.SummaryWriter(logs_path + '/test')
 ############################################################################
 num_epochs = 10 
 batch_size = 100
 
+init = tf.initialize_all_variables()
+saver = tf.train.Saver()
+
+
 with tf.Session() as session:
-	session.run(tf.initialize_all_variables())
+	session.run(init)
+	train_writer = tf.train.SummaryWriter(logs_path + '/train',\
+	 graph=tf.get_default_graph())
 	# summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 	
 	for epoch in range(num_epochs):
@@ -334,4 +343,6 @@ with tf.Session() as session:
 
 	print("Test accuracy: ", "{:.3f}".format(test))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
-	
+	save_path = saver.save(session, \
+		"/home/tjdias/Desktop/py_multimodal/model.ckpt")
+	print("Model saved in file: %s" % save_path)

@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/tjdias/Desktop/py_multimodal/model.ckpt"
+all_model_checkpoint_paths: "/home/tjdias/Desktop/py_multimodal/model.ckpt"
