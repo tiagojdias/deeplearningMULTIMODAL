@@ -31,7 +31,6 @@ trainImgAux = mat_contents['trainImg']
 trainMaskAux = mat_contents['trainMask']
 trainClass = mat_contents['trainClass']
 
-
 mat_contents = sio.loadmat('Val_stuff.mat')
 # print(mat_contents.keys())
 validImgAux = mat_contents['valImg']
@@ -186,8 +185,7 @@ logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/'
 
 # timer = time.time()
 
-tf_train_dataset = tf.placeholder(tf.float32, \
-  shape=[None, imgSize, imgSize, num_channels])
+tf_train_dataset = tf.placeholder(tf.float32,shape=[None, imgSize, imgSize, num_channels])
 tf_train_labels = tf.placeholder(tf.float32, \
   shape=[None, num_classes])
 
@@ -286,6 +284,8 @@ with tf.Session() as session:
   
   print(vars[0])
   print(vars[1])
+  print(vars)
+  print(vars[25])
   # print(vars[0].shape)
   # print(vars[1].shape)
   # print(vars[2].shape)
