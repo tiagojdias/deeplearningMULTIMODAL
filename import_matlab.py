@@ -177,24 +177,21 @@ num_channels3 = 500
 
 
 CASE = 2
-saver_path = "/home/tjdias/Desktop/py_multimodal/work/"
+# saver_path = "/home/tjdias/Desktop/py_multimodal/work/"
 # saver_path = "/home/tiago/Desktop/deeplearningMULTIMODAL/home/"
-#Work path to save the Tensorboard variables
-logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
+
+# Work path to save the Tensorboard variables
+# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
 # #Home pah to save the Tensorboard variables
 # logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/home/'
 
 timer = time.time()
 
-tf_train_dataset = tf.placeholder(tf.float32, \
-	shape=[None, imgSize, imgSize, num_channels])
-tf_train_labels = tf.placeholder(tf.float32, \
-	shape=[None, num_classes])
+tf_train_dataset = tf.placeholder(tf.float32, shape=[None, imgSize, imgSize, num_channels])
+tf_train_labels = tf.placeholder(tf.float32, shape=[None, num_classes])
 
-tf_test_dataset = tf.placeholder(tf.float32,\
-	shape=[None, imgSize, imgSize, num_channels])
-tf_test_labels = tf.placeholder(tf.float32, \
-	shape=[None, num_classes])
+tf_test_dataset = tf.placeholder(tf.float32, shape=[None, imgSize, imgSize, num_channels])
+tf_test_labels = tf.placeholder(tf.float32, shape=[None, num_classes])
 
 def model(x, is_train):
 	with tf.variable_scope("conv1"):
