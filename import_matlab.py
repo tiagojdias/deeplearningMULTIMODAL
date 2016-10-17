@@ -10,7 +10,6 @@ import random
 import math
 import scipy.io as sio
 
-
 # Image Definition
 imgSize = 56
 imgSize_flat = imgSize * imgSize
@@ -178,12 +177,12 @@ num_channels3 = 500
 
 
 CASE = 2
-# saver_path = "/home/tjdias/Desktop/py_multimodal/work/"
-saver_path = "/home/tiago/Desktop/deeplearningMULTIMODAL/home/"
+saver_path = "/home/tjdias/Desktop/py_multimodal/work/"
+# saver_path = "/home/tiago/Desktop/deeplearningMULTIMODAL/home/"
 #Work path to save the Tensorboard variables
-# logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
+logs_path = '/home/tjdias/Desktop/py_multimodal/tensorflow_logs/work/'
 # #Home pah to save the Tensorboard variables
-logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/home/'
+# logs_path = '/home/tiago/Desktop/deeplearningMULTIMODAL/tensorflow_logs/home/'
 
 timer = time.time()
 
@@ -265,10 +264,11 @@ tf.scalar_summary("accuracy_train", accuracy)
 correct_prediction_test = tf.equal(tf.argmax(test_prediction, 1),\
 	tf.argmax(tf_test_labels, 1))
 accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test,tf.float32))
-
+# tf.scalar_summary("accuracy_test", accuracy_test)
 #############################################################################
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
+print (merged_summary_op)
 
 # valid_writer = tf.train.SummaryWriter(logs_path + '/valid')
 # test_writer = tf.train.SummaryWriter(logs_path + '/test')
@@ -325,8 +325,7 @@ with tf.Session() as session:
 		# summary, valid = session.run(
 		# 	[merged_summary_op, accuracy_test], feed_dict = feed_dict_valid)
 		valid = accuracy_test.eval(feed_dict = feed_dict_valid)
-		
-		# valid_writer.add_summary(summary,epoch * num_steps + step)
+		# train_writer.add_summary(summary,epoch * num_steps + step)
 
 		print("Epoch:", '%d' % (epoch+1),\
 		 "Train loss=", "{:.3f}".format(avg_cost),\
@@ -335,13 +334,13 @@ with tf.Session() as session:
 
 
 		#WORK DIR
-		# save_path = saver.save(session, \
-		# 	"/home/tjdias/Desktop/py_multimodal/model", \
-		# 	global_step = epoch)
-		#HOME DIR
 		save_path = saver.save(session, \
-			"/home/tiago/Desktop/deeplearningMULTIMODAL/model", \
+			"/home/tjdias/Desktop/py_multimodal/model", \
 			global_step = epoch)
+		#HOME DIR
+		# save_path = saver.save(session, \
+		# 	"/home/tiago/Desktop/deeplearningMULTIMODAL/model", \
+		# 	global_step = epoch)
 		print("Model saved in file: %s" % save_path)
 	# print("Optimization Finished!")
 	if CASE == 1:
@@ -349,9 +348,10 @@ with tf.Session() as session:
 	else:
 		feed_dict_test = {tf_test_dataset: testMask, tf_test_labels : testClass}
 	
-	test = accuracy_test.eval(feed_dict = feed_dict_test)
+	test = session.run(accuracy_test, 
+		feed_dict = feed_dict_test)
 	
-	# test_writer.add_summary(summary,epoch * num_steps + step)
+	# train_writer.add_summary(summary,epoch * num_steps + step)
 
 	print("Test accuracy: ", "{:.3f}".format(test))
 	print("Elapsed time is " + str(time.time() - timer) + " seconds.")
