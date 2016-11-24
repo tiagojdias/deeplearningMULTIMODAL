@@ -24,7 +24,6 @@ nmbValImg = 723
 nmbTestImg = 501
 
 
-
 mat_contents = sio.loadmat('Trn_stuff.mat')
 # print(mat_contents.keys())
 trainImgAux = mat_contents['trainImg']
